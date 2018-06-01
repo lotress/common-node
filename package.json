@@ -1,0 +1,26 @@
+{
+  "name": "common-node",
+  "version": "1.0.0",
+  "description": "routines library for my node.js projects",
+  "main": "common.js",
+  "devDependencies": {
+    "coffeescript": ">=2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "coffee -m -b -o . -c src/common.coffee"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lotress/common-node.git"
+  },
+  "keywords": [
+    "routine"
+  ],
+  "author": "lotress",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/lotress/common-node/issues"
+  },
+  "homepage": "https://github.com/lotress/common-node#readme"
+}
