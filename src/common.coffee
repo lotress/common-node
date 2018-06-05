@@ -1,3 +1,6 @@
+identity = (x) => x
+None = => undefined
+
 isType = (type) => (x) => typeof x is type
 isObject = isType 'object'
 isFunction = isType 'function'
@@ -13,9 +16,6 @@ flatObject = (o) =>
       Object.assign res, flatObject o[key]
     else if not res[key]? then res[key] = o[key]
   res
-
-identity = (x) => x
-None = => undefined
 
 isSymmetry = (f) => (...args) =>
   l = f ...args
@@ -133,30 +133,23 @@ logInfo = genLog(1) bindObject console, 'log'
 
 logError = genLog(-1) bindObject console, 'error'
 
-getFullPath = (directory) =>
-  path = require 'path'
-  p = path.join process.cwd(), directory
-  (name) =>
-    path.join p, name
-
 module.exports = {
-  concatArr,
-  flatArray,
-  flatObject,
   identity,
   None,
   M,
+  concatArr,
+  flatArray,
+  flatObject,
   invokeAsync,
   allAwait,
   raceAwait,
   delay,
   deadline,
   retry,
+  pall,
   makeFrame,
   firstElement,
-  pall,
   pushMap,
   logInfo,
-  logError,
-  getFullPath
+  logError
 }

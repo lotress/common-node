@@ -7,7 +7,7 @@
     "coffeescript": ">=2"
   },
   "scripts": {
-    "build": "coffee -m -b -o . -c src/common.coffee",
+    "build": "coffee -m -b -o . -c src/",
     "test": "coffee src/test.coffee"
   },
   "repository": {

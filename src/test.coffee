@@ -13,4 +13,4 @@ test1 = Test('lazy Monad') (report) =>
   report seq: 1
 
   f 1
-  .then =>   report seq: Infinity
+  .then => report seq: Infinity
