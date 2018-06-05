@@ -7,8 +7,8 @@
     "coffeescript": ">=2"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "coffee -m -b -o . -c src/common.coffee"
+    "build": "coffee -m -b -o . -c src/common.coffee",
+    "test": "coffee src/test.coffee"
   },
   "repository": {
     "type": "git",

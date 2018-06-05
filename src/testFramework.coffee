@@ -3,6 +3,7 @@ logFail = (description) => (e) =>
 
 Test = (description) =>
   fail = logFail description
+  assertBy = AssertBy do Asserts
 
   (testFn) =>
     flag = true
@@ -39,7 +40,7 @@ assertSeq = =>
       if isFinite(c) or c is Infinity then count = +c
       true
 
-assertBy = (o) =>
+AssertBy = (asserts) => (o) =>
   p = []
   for key, value of o
     p.push Promise.resolve asserts[key] value
@@ -47,6 +48,6 @@ assertBy = (o) =>
   .then (res) => res.every (flag) => !!flag
   .then assert
 
-asserts = {assert, seq: assertSeq}
+Asserts = => {assert, seq: do assertSeq}
 
 module.exports = Test
