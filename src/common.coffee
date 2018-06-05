@@ -1,19 +1,72 @@
-concatArr = (res, arr) =>
-  res.concat arr
+isType = (type) => (x) => typeof x is type
+isObject = isType 'object'
+isFunction = isType 'function'
 
-flatArray = (arr) =>
-  arr.reduce concatArr, []
+concatArr = (arr, cur) => arr.concat if Array.isArray cur then cur else [cur]
+
+flatArray = (arr) => arr.reduce concatArr, []
 
 flatObject = (o) =>
   res = {}
   for key of o when o[key]? and o.hasOwnProperty key
-    if (typeof o[key] is 'object') and (not Array.isArray o[key])
+    if (isObject o[key]) and (not Array.isArray o[key])
       Object.assign res, flatObject o[key]
     else if not res[key]? then res[key] = o[key]
   res
 
 identity = (x) => x
 None = => undefined
+
+isSymmetry = (f) => (...args) =>
+  l = f ...args
+  r = f ...args.reverse()
+  l is r
+
+isIterable = (x) => isObject(x) and x[Symbol.iterator]
+getIterator = (x) => x[Symbol.iterator]()
+isMultiIterable = (x) => isIterable(x) and not isSymmetry(getIterator) x
+
+mapList = (func) => (list) ->
+  for item from list
+    x = func list
+    if isIterable x
+      yield* x
+    else
+      yield x
+
+# M constructs a Monad wrapping a deferred function using Promise
+# M(f) is lazy and reinvokable just like a plain function
+# with .then and .catch methods like a Promise
+M = do =>
+  handler = (onFulfilled, onRejected) ->
+    if not isFunction onFulfilled then onFulfilled = null
+    if not isFunction onRejected then onRejected = null
+    if onFulfilled or onRejected
+      @deferreds.push {onFulfilled, onRejected}
+    @
+  reject = (onRejected) -> @then null, onRejected
+  (f) =>
+    if not isFunction f
+      _t = f
+      f = => _t
+    deferreds = []
+    r = (...args) ->
+      # everytime when r is called,
+      # we new a Promise and append every deferreds to it,
+      # so r is reinvokable
+      p = Promise.resolve()
+      .then => f ...args
+      for d in deferreds
+        p = p.then d.onFulfilled, d.onRejected
+      deferreds = null
+      p
+    r.deferreds = deferreds
+    Object.assign r,
+      # since M(f) is just a function and
+      # Promise.prototype.then will lift function to Promise, leaving Promise untouched.
+      # we use .then alias for both .map and .bind in a typical Monad
+      then: handler.bind r
+      catch: reject.bind r
 
 bindObject = (o, name) => o[name].bind o
 
@@ -43,8 +96,7 @@ makeFrame = (keys) => (values) =>
 
 firstElement = (iterable) => iterable[Symbol.iterator]().next().value
 
-pall = (fn) => (items) =>
-  allPromise items.map fn
+pall = (fn) => (items) => allPromise mapArr(fn) items
 
 pushMap = (map) => (item) => (key) =>
   c = map.get key
@@ -93,6 +145,7 @@ module.exports = {
   flatObject,
   identity,
   None,
+  M,
   invokeAsync,
   allAwait,
   raceAwait,
