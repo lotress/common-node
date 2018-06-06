@@ -6,26 +6,48 @@ _ = require './common'
   delay,
   deadline,
   retry,
+  allAwait,
+  raceAwait,
   logInfo,
   logError
 } = _
 
 Test('lazy Monad') (report) =>
-  logInfo "test #1"
-  f = _.M (x) => x
-  .then (x) => report assert: x is 1
-  .then => report seq: 2
+  status = 1
+  seq = 3
+  f = _.M (x) => x + 1
+  .then (x) =>
+    report seq: ++seq
+    x
+  .then (x) => report assert: x is 2
+  .then => report assert: status is 2
   .then =>
-    logError 'throw an error in test #1'
     throw new Error 'wrong'
   .then => report assert: false
   .catch (e) => report assert: e.message is 'wrong'
-  .then => report seq: 3
+  .then => report seq: ++seq
 
   report seq: 1
 
   f 1
+
+  report seq: 2
+  status = 2
+
+  f 1
   .then => report seq: Infinity
+
+  report seq: 3
+
+Test('Monad handler type check') (report) =>
+  try
+    f = _.M (x) => x + 1
+    .then null, logError
+    .then do Promise.resolve
+    .then => throw new Error 'wrong'
+    f 1
+  catch e
+    report assert: e instanceof TypeError
 
 Test('identity') (report) =>
   logInfo "test #2"
@@ -38,3 +60,62 @@ Test('None') (report) =>
   x = {}
   report assert: undefined is None.apply @, [x, {}]
   report assert: undefined is do None
+
+Test('wait with delay and deadline') (report) =>
+  start = Date.now()
+  timing = (time) => do delay time
+  interval = (k) => (time) =>
+    report assert: Date.now() - start >= time * k
+    time
+  f = _.M timing
+  .then interval 1
+  .then timing
+  .then interval 2
+  .then (time) => do deadline time
+  .catch interval 3
+
+  f 100
+
+Test('death race') (report) =>
+  life = 1000
+  f = (time) =>
+    a = allAwait [identity, delay(time), delay time * 2]
+    g = _.M a
+    .then None
+    .then a
+    .then None
+    .then a
+    .then =>
+      report assert: Date.now() - start >= time * 6
+    h = raceAwait [g, deadline life]
+    logInfo "race began with time interval #{time}ms"
+    start = Date.now()
+    h().then =>
+      report assert: Date.now() - start < life
+      logInfo "after #{Date.now() - start}ms,
+        should resolve when time interval < #{life} / 6"
+    .catch (e) =>
+      report assert: e is life
+      report assert: Date.now() - start >= e
+      logInfo "after #{Date.now() - start}ms,
+        should resolve when time interval > #{e} / 6"
+
+  f 100
+  f 200
+
+Test('retry') (report) =>
+  f = (times = 3) =>
+    count = 0
+    =>
+      count += 1
+      if count < times
+        throw new Error "#{count} < #{times}"
+      return count
+
+  retry(f())(2)()
+  .then => report assert: false
+  .catch (e) => report assert: e.message is '2 < 3'
+
+  retry(f())(3)()
+  .then (r) => report assert: r is 3
+  .catch => report assert: false

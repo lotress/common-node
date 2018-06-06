@@ -25,7 +25,7 @@ concatArr = (arr, cur) => {
   return arr.concat(Array.isArray(cur) ? cur : [cur]);
 };
 
-flatArray = (arr) => {
+flatArray = (arr = []) => {
   return arr.reduce(concatArr, []);
 };
 
@@ -44,7 +44,11 @@ flatObject = (o) => {
   return res;
 };
 
+// Synchronous function only
 isSymmetry = (f) => {
+  if (!isFunction(f)) {
+    throw new TypeError('Parameter is not a Function');
+  }
   return (...args) => {
     var l, r;
     l = f(...args);
@@ -86,15 +90,19 @@ mapList = (func) => {
 // with .then and .catch methods like a Promise
 M = (() => {
   var handler, reject;
+  // though this interface looks like Promise, but Promise isn't reinvokable,
+  // so we do not accept a Promise here
   handler = function(onFulfilled, onRejected) {
-    if (!isFunction(onFulfilled)) {
-      onFulfilled = null;
+    if (onFulfilled && !isFunction(onFulfilled)) {
+      throw new TypeError("Parameter onFulfilled isn't a Function");
     }
-    if (!isFunction(onRejected)) {
-      onRejected = null;
+    if (onRejected && !isFunction(onRejected)) {
+      throw new TypeError("Parameter onRejected isn't a Function");
     }
     if (onFulfilled || onRejected) {
       this.deferreds.push({onFulfilled, onRejected});
+    } else {
+      throw new TypeError('Neither onFulfilled nor onRejected is a Function');
     }
     return this;
   };
@@ -111,19 +119,14 @@ M = (() => {
     }
     deferreds = [];
     r = function(...args) {
-      var d, j, len, p;
       // everytime when r is called,
       // we new a Promise and append every deferreds to it,
       // so r is reinvokable
-      p = Promise.resolve().then(() => {
+      return deferreds.reduce(((p, d) => {
+        return p.then(d.onFulfilled, d.onRejected);
+      }), Promise.resolve().then(() => {
         return f(...args);
-      });
-      for (j = 0, len = deferreds.length; j < len; j++) {
-        d = deferreds[j];
-        p = p.then(d.onFulfilled, d.onRejected);
-      }
-      deferreds = null;
-      return p;
+      }));
     };
     r.deferreds = deferreds;
     return Object.assign(r, {
@@ -151,7 +154,7 @@ invokeAsync = (func) => {
 };
 
 expandApply = (func) => {
-  return (arr) => {
+  return (arr = []) => {
     return func(...arr);
   };
 };
@@ -163,7 +166,7 @@ mapArr = (func) => {
 };
 
 zipApplyArr = (a1) => {
-  return (a2) => {
+  return (a2 = []) => {
     return a1.map((f, i) => {
       return f(a2[i]);
     });
@@ -173,6 +176,15 @@ zipApplyArr = (a1) => {
 invokePromises = (predicate) => {
   return (funcs) => {
     var fz, g;
+    if (!Array.isArray(funcs)) {
+      throw new TypeError('Functions is not an Array');
+    }
+    if (!(funcs != null ? funcs.length : void 0)) {
+      throw new TypeError('Functions is empty');
+    }
+    if (!funcs.every(isFunction)) {
+      throw new TypeError('Some handler is not a Function');
+    }
     g = (f) => {
       return expandApply(invokeAsync(f));
     };
@@ -195,8 +207,8 @@ apply = (func) => {
   };
 };
 
-makeFrame = (keys) => {
-  return (values) => {
+makeFrame = (keys = []) => {
+  return (values = []) => {
     var o;
     o = {};
     keys.forEach((key, i) => {
@@ -213,12 +225,18 @@ firstElement = (iterable) => {
 };
 
 pall = (fn) => {
-  return (items) => {
+  if (!isFunction(fn)) {
+    throw new TypeError('Parameter is not a Function');
+  }
+  return (items = []) => {
     return allPromise(mapArr(fn)(items));
   };
 };
 
 pushMap = (map) => {
+  if (!map instanceof Map) {
+    throw new TypeError('Parameter is not a Map');
+  }
   return (item) => {
     return (key) => {
       var c;
@@ -232,6 +250,7 @@ pushMap = (map) => {
   };
 };
 
+// Let setTimeout converts timeout parameter, no check here
 delay = (timeout) => {
   return () => {
     return new Promise((resolve) => {
@@ -253,12 +272,21 @@ deadline = (timeout) => {
 };
 
 retry = (f) => {
+  if (!isFunction(f)) {
+    throw new TypeError('Parameter is not a Function');
+  }
   return (count = 1) => {
+    count = +count;
+    if (!(count >= 0)) {
+      throw new Error('Retry count is negative or NaN');
+    }
     return (...args) => {
       var g;
       return (g = (e) => {
         if (count--) {
-          return Promise.resolve(f(...args)).catch(g);
+          return Promise.resolve().then(() => {
+            return f(...args);
+          }).catch(g);
         } else {
           return Promise.reject(e);
         }

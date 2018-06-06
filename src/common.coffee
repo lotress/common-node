@@ -7,7 +7,7 @@ isFunction = isType 'function'
 
 concatArr = (arr, cur) => arr.concat if Array.isArray cur then cur else [cur]
 
-flatArray = (arr) => arr.reduce concatArr, []
+flatArray = (arr = []) => arr.reduce concatArr, []
 
 flatObject = (o) =>
   res = {}
@@ -17,10 +17,14 @@ flatObject = (o) =>
     else if not res[key]? then res[key] = o[key]
   res
 
-isSymmetry = (f) => (...args) =>
-  l = f ...args
-  r = f ...args.reverse()
-  l is r
+# Synchronous function only
+isSymmetry = (f) =>
+  if not isFunction f
+    throw new TypeError 'Parameter is not a Function'
+  (...args) =>
+    l = f ...args
+    r = f ...args.reverse()
+    l is r
 
 isIterable = (x) => isObject(x) and x[Symbol.iterator]
 getIterator = (x) => x[Symbol.iterator]()
@@ -38,11 +42,17 @@ mapList = (func) => (list) ->
 # M(f) is lazy and reinvokable just like a plain function
 # with .then and .catch methods like a Promise
 M = do =>
+  # though this interface looks like Promise, but Promise isn't reinvokable,
+  # so we do not accept a Promise here
   handler = (onFulfilled, onRejected) ->
-    if not isFunction onFulfilled then onFulfilled = null
-    if not isFunction onRejected then onRejected = null
+    if onFulfilled and not isFunction onFulfilled
+      throw new TypeError "Parameter onFulfilled isn't a Function"
+    if onRejected and not isFunction onRejected
+      throw new TypeError "Parameter onRejected isn't a Function"
     if onFulfilled or onRejected
       @deferreds.push {onFulfilled, onRejected}
+    else
+      throw new TypeError 'Neither onFulfilled nor onRejected is a Function'
     @
   reject = (onRejected) -> @then null, onRejected
   (f) =>
@@ -54,12 +64,8 @@ M = do =>
       # everytime when r is called,
       # we new a Promise and append every deferreds to it,
       # so r is reinvokable
-      p = Promise.resolve()
-      .then => f ...args
-      for d in deferreds
-        p = p.then d.onFulfilled, d.onRejected
-      deferreds = null
-      p
+      deferreds.reduce ((p, d) => p.then d.onFulfilled, d.onRejected)
+      , Promise.resolve().then => f ...args
     r.deferreds = deferreds
     Object.assign r,
       # since M(f) is just a function and
@@ -75,10 +81,16 @@ racePromise = bindObject Promise, 'race'
 
 invokeAsync = (func) => (args...) -> await func args...
 
-expandApply = (func) => (arr) => func arr...
+expandApply = (func) => (arr = []) => func arr...
 mapArr = (func) => (arr) => arr.map func
-zipApplyArr = (a1) => (a2) => a1.map (f, i) => f a2[i]
+zipApplyArr = (a1) => (a2 = []) => a1.map (f, i) => f a2[i]
 invokePromises = (predicate) => (funcs) =>
+  if not Array.isArray funcs
+    throw new TypeError 'Functions is not an Array'
+  if not funcs?.length
+    throw new TypeError 'Functions is empty'
+  if not funcs.every isFunction
+    throw new TypeError 'Some handler is not a Function'
   g = (f) => expandApply invokeAsync f
   fz = zipApplyArr mapArr(g) funcs
   (arr) => predicate fz arr
@@ -88,7 +100,7 @@ apply = (func) =>
   f = expandApply invokeAsync func
   (mapFunc) => mapFunc f
 
-makeFrame = (keys) => (values) =>
+makeFrame = (keys = []) => (values = []) =>
   o = {}
   keys.forEach (key, i) =>
     if values[i] isnt undefined then o[key] = values[i]
@@ -96,14 +108,21 @@ makeFrame = (keys) => (values) =>
 
 firstElement = (iterable) => iterable[Symbol.iterator]().next().value
 
-pall = (fn) => (items) => allPromise mapArr(fn) items
+pall = (fn) =>
+  if not isFunction fn
+    throw new TypeError 'Parameter is not a Function'
+  (items = []) => allPromise mapArr(fn) items
 
-pushMap = (map) => (item) => (key) =>
-  c = map.get key
-  c ?= []
-  c.push item
-  map.set key, c
+pushMap = (map) =>
+  if not map instanceof Map
+    throw new TypeError 'Parameter is not a Map'
+  (item) => (key) =>
+    c = map.get key
+    c ?= []
+    c.push item
+    map.set key, c
 
+# Let setTimeout converts timeout parameter, no check here
 delay = (timeout) => =>
   new Promise (resolve) =>
     setTimeout (=> resolve(timeout)), timeout
@@ -112,13 +131,20 @@ deadline = (timeout) => =>
   new Promise (resolve, reject) =>
     setTimeout (=> reject(timeout)), timeout
 
-retry = (f) => (count = 1) => (...args) =>
-  do g = (e = undefined) =>
-    if count--
-      Promise.resolve f ...args
-      .catch g
-    else
-      Promise.reject e
+retry = (f) =>
+  if not isFunction f
+    throw new TypeError 'Parameter is not a Function'
+  (count = 1) =>
+    count = +count
+    if not(count >= 0)
+      throw new Error 'Retry count is negative or NaN'
+    (...args) =>
+      do g = (e = undefined) =>
+        if count--
+          Promise.resolve().then => f ...args
+          .catch g
+        else
+          Promise.reject e
 
 logLevel = 2
 
