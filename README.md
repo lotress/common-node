@@ -27,13 +27,13 @@ import {
   pushMap,
   logInfo,
   logError
-} from 'common'
+} from 'common-node'
 ```
 
 Routines for node.js environment are in ``common-node.js``
 
 ```javascript
-import {getFullPath} from 'common/common-node'
+import {getFullPath} from 'common-node/common-node'
 ```
 
 ## Build from source
