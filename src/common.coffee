@@ -41,6 +41,12 @@ mapList = (func) => (list) ->
 # M constructs a Monad wrapping a deferred function using Promise
 # M(f) is lazy and reinvokable just like a plain function
 # with .then and .catch methods like a Promise
+# Monad Laws:
+# f: a -> M b
+# g: b -> M c
+# unit(a).then f = f a
+# unit unit x = unit x
+# m.then(f).then(g) = m.then a -> f(a).then g
 M = do =>
   # though this interface looks like Promise, but Promise isn't reinvokable,
   # so we do not accept a Promise here
@@ -59,6 +65,8 @@ M = do =>
     if not isFunction f
       _t = f
       f = => _t
+    if isFunction(f.then) and isFunction(f.catch)
+      return f
     deferreds = []
     r = (...args) ->
       # everytime when r is called,
