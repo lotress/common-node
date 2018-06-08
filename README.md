@@ -4,7 +4,7 @@
 A routine library for my javascript projects
 
 ## Requirements
-A JavaScript runtime supports most ES6 features and ES7 async/await
+A JavaScript runtime supports most ES6 features and ES7 async/await, e.g Node.js >= v8.0
 
 ## Install
 ```bash
@@ -44,7 +44,7 @@ import {
 logInfo(identity('hello')) // hello
 logError(None('wrong')) // undefined
 ```
-
+----
 `M` takes a function, wrap it into a Monad which can be called as the original function, with additional `.then` and `.catch` interface
 
 `M: (input: *any -> output: any) -> ContinuationMonad`
@@ -65,7 +65,7 @@ let f = M(x => new Promise(resolve => setTimeout((=> resolve(x)), 1000)))
 .catch(e => logError(e))
 
 // do something
-// you can manipulate f like normal function
+// you can manipulate f like a normal function
 // or attach more callbacks to it
 
 f('hello') // ContinuationMonad can be called multiple times, all callbacks are kept
@@ -77,12 +77,12 @@ f('world')
 // log error 'wrong'
 // log error 'wrong'
 ```
-
+----
 `delay` and `deadline` are functions return a Promise resolve/reject after given timeout
 
-`delay: (time: number) -> -> Promise(time)`
+`delay: (time: number) -> () -> Promise(time)`
 
-`deadline: (time: number) -> -> Promise(time)`
+`deadline: (time: number) -> () -> Promise(time)`
 
 `allAwait` and `raceAwait` are lazy modification of Promise.all and Promise.race
 
@@ -90,17 +90,19 @@ f('world')
 
 `deadline: (funcs: Array[input: *any -> output: any]) -> (args: Array[input]) -> Promise(Array[output])`
 
+args are passed to funcs with same index
+
 - Example, see `Test('death race')` in [test](./src/test.coffee)
 
 ```javascript
 let life = 1000
 let f = time => {
-  let a = allAwait([identity, delay(time), delay(time * 2)])
-  let g = M(a)
-  .then(None) // no arguments should be passed to a
-  .then(a)
+  let awaitFunc = allAwait([identity, delay(time), delay(time * 2)])
+  let g = M(awaitFunc)
+  .then(None) // no arguments should be passed to awaitFunc here
+  .then(awaitFunc)
   .then(None)
-  .then(a)
+  .then(awaitFunc)
 
   let h = raceAwait([g, deadline(life)])
   logInfo(`race began with time interval ${time}ms`)
@@ -123,7 +125,7 @@ waiting about 400ms
 log error 'after 1000ms, life ends'
 */
 ```
-
+----
 `retry` takes a function (synchronous or asynchronous) which possibly throws and a retry count,
 returns a wrapped function with same input parameters,
 call this wrapped function will repeatly try the original one until it didn't throw or retry count met,
