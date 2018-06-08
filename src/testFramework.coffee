@@ -1,5 +1,7 @@
+{logInfo, logError, isFunction} = require './common'
 logFail = (description) => (e) =>
-  console.error "Test #{description} failed with message: #{e.message}"
+  logError "Test #{description} failed with message: #{e.message}"
+  false
 
 Test = (description) =>
   fail = logFail description
@@ -16,6 +18,7 @@ Test = (description) =>
         Promise.resolve o
         .then (o) => await assertBy o
         .catch failPass
+        .then => flag
       else throw o
     Promise.resolve()
     .then => await testFn report
@@ -24,7 +27,8 @@ Test = (description) =>
         await assertBy o
       else throw o
     .then =>
-      if flag then console.log "Test #{description} passed"
+      if flag then logInfo "Test #{description} passed"
+      flag
     .catch fail
 
 assert = (flag) =>
@@ -42,7 +46,7 @@ assertSeq = =>
 
 AssertBy = (asserts) => (o) =>
   p = []
-  for key, value of o
+  for key, value of o when isFunction asserts[key]
     p.push Promise.resolve asserts[key] value
   Promise.all p
   .then (res) => res.every (flag) => !!flag

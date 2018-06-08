@@ -185,5 +185,6 @@ module.exports = {
   firstElement,
   pushMap,
   logInfo,
-  logError
+  logError,
+  isFunction
 }
