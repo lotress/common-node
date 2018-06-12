@@ -49,7 +49,7 @@ logError(None('wrong')) // undefined
 
 `M: (input: *any -> output: any) -> ContinuationMonad`
 
-`ContinuationMonad: input -> Promise(output)`
+`ContinuationMonad: input -> Promise(-> output)`
 
 `ContinuationMonad.then: (onFulfilled: (input: output -> output: any)?, onRejected: (reason: any -> any)?) -> ContinuationMonad`
 at least one of two callbacks is required
@@ -80,15 +80,15 @@ f('world')
 ----
 `delay` and `deadline` are functions return a Promise resolve/reject after given timeout
 
-`delay: (time: number) -> () -> Promise(time)`
+`delay: (time: number) -> () -> Promise(-> time)`
 
-`deadline: (time: number) -> () -> Promise(time)`
+`deadline: (time: number) -> () -> Promise(-> time)`
 
 `allAwait` and `raceAwait` are lazy modification of Promise.all and Promise.race
 
-`allAwait: (funcs: Array[input: *any -> output: any]) -> (args: Array[input]) -> Promise(Array[output])`
+`allAwait: (funcs: Array[input: *any -> output: any]) -> (args: Array[input]) -> Promise(-> Array[output])`
 
-`deadline: (funcs: Array[input: *any -> output: any]) -> (args: Array[input]) -> Promise(Array[output])`
+`deadline: (funcs: Array[input: *any -> output: any]) -> (args: Array[input]) -> Promise(-> Array[output])`
 
 args are passed to funcs with same index
 
@@ -132,7 +132,7 @@ call this wrapped function will repeatly try the original one until it didn't th
 return a Promise, if the original function didn't throw then resolve its return value,
 else reject with the error it thrown
 
-`retry: (input: *any -> output: any) -> (retryCount: number) -> (input: *any) -> Promise(output)`
+`retry: (input: *any -> output: any) -> (retryCount: number) -> (input: *any) -> Promise(-> output)`
 
 
 - Example, see `Test('retry')` in [test](./src/test.coffee)
@@ -182,11 +182,11 @@ import {Test} from 'common-node/testFramework'
 
 For each test case, call Test with description and you test procedure
 
-`Test: (description: string) -> ((report: reportFn) -> ReportObject?) -> Promise(boolean)`
+`Test: (description: string) -> ((report: reportFn) -> ReportObject?) -> Promise(-> boolean)`
 
 in test procedure, you can return a ReportObject or call reportFn with a ReportObject for an assertion
 
-`reportFn: ReportObject -> Promise.resolve(true) | Promise.reject()`
+`reportFn: ReportObject -> Promise(-> true) | Promise.reject()`
 
 there are two kind of assertion now,
 assert for a boolean value, pass if the value is truly;
