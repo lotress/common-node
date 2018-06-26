@@ -164,7 +164,7 @@ results return in an Array.
 - Example, see `Test('sequence')` in [test](./src/test.coffee)
 
 ```javascript
-number = function*() {
+let number = function*() {
   var n;
   n = 1;
   while (true) {
