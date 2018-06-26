@@ -27,6 +27,7 @@ import {
   deadline,
   retry,
   pushMap,
+  sequence,
   logInfo,
   logError
 } from 'common-node'
