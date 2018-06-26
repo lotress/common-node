@@ -8,6 +8,7 @@ _ = require './common'
   retry,
   allAwait,
   raceAwait,
+  sequence,
   logInfo,
   logError
 } = _
@@ -119,3 +120,26 @@ Test('retry') (report) =>
   retry(f())(3)()
   .then (r) => report assert: r is 3
   .catch => report assert: false
+
+Test('sequence') (report) =>
+  number = ->
+    n = 1
+    while true
+      yield n++
+    return
+
+  f = (x) ->
+    if x < 5
+      report seq: x
+      x
+    else undefined
+
+  g = (x) ->
+    new Promise (resolve) =>
+      h = -> resolve f x
+      setTimeout h, 1000
+
+  s = sequence(g) number()
+  report seq: 0
+  a = await s
+  report assert: a.every (x, i) => x is i + 1

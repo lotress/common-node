@@ -116,6 +116,14 @@ makeFrame = (keys = []) => (values = []) =>
 
 firstElement = (iterable) => iterable[Symbol.iterator]().next().value
 
+sequence = (f) => (iterable) =>
+  for i from iterable
+    res = await f i
+    if res?
+      res
+    else
+      break
+
 pall = (fn) =>
   if not isFunction fn
     throw new TypeError 'Parameter is not a Function'
@@ -183,6 +191,7 @@ module.exports = {
   pall,
   makeFrame,
   firstElement,
+  sequence,
   pushMap,
   logInfo,
   logError,

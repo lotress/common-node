@@ -134,7 +134,6 @@ else reject with the error it thrown
 
 `retry: (input: *any -> output: any) -> (retryCount: number) -> (input: *any) -> Promise(-> output)`
 
-
 - Example, see `Test('retry')` in [test](./src/test.coffee)
 
 ```javascript
@@ -153,6 +152,36 @@ retry(f())(2)()
 
 retry(f())(3)()
 .then(logInfo) // print '3'
+```
+----
+`sequence` takes a function then a iterable object,
+sequential apply and wait the function on elements of the iterable,
+loop ends if the function returns `null` or `undefined` or reached the end of the iterable,
+results return in an Array.
+
+`sequence: (input: any -> output: any) -> (iter: iterable) -> Promise(-> array[output])`
+
+- Example, see `Test('sequence')` in [test](./src/test.coffee)
+
+```javascript
+number = function*() {
+  var n;
+  n = 1;
+  while (true) {
+    yield n++;
+  }
+};
+
+let f = x => x < 5 ? x : void 0
+
+let g = x => {
+  return new Promise((resolve) => {
+    var h = () => resolve(f(x))
+    return setTimeout(h, 1000);
+  })
+}
+
+console.log(await sequence(g)(number())) // [1, 2, 3, 4] after 5s
 ```
 
 ### Node.js Library
