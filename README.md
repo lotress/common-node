@@ -60,9 +60,9 @@ at least one of two callbacks is required
 - Example
 
 ```javascript
-let f = M(x => new Promise(resolve => setTimeout((=> resolve(x)), 1000)))
+let f = M(x => new Promise(resolve => setTimeout((() => resolve(x)), 1000)))
 .then(x => logInfo(x))
-.then(=> new Promise((_, reject) => setTimeout((=> reject('wrong')), 1000)))
+.then(() => new Promise((_, reject) => setTimeout((() => reject('wrong')), 1000)))
 .catch(e => logError(e))
 
 // do something
@@ -110,7 +110,7 @@ let f = time => {
   let start = Date.now()
   return h().then(() => {
     logInfo(`after 600ms, race ends`)
-  }).catch((e) => {
+  }).catch(e => {
     logError(`after 1000ms, life ends`)
   })
 }
@@ -140,7 +140,7 @@ else reject with the error it thrown
 ```javascript
 let f = (times = 3) => {
   var count = 0
-  return => {
+  return () => {
     count += 1
     if (count < times)
       throw new Error(`${count} < ${times}`)
@@ -229,11 +229,9 @@ seq for monotonous increase sequence number, pass if seq number is larger than l
 ```javascript
 Test('example test')(report =>
   let start = Date.now()
-  let p = new Promise(resolve => {
-    setTimeout((=> resolve()), 1000)
-  })
+  let p = new Promise(resolve => setTimeout(resolve, 1000))
 
-  p.then(=> report({seq: 2, assert: Date.now() - start > 999}))
+  p.then(() => report({seq: 2, assert: Date.now() - start > 999}))
 
   report({seq: 1})
 )
