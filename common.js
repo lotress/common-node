@@ -232,12 +232,12 @@ makeFrame = (keys = []) => {
   };
 };
 
-firstElement = (iterable) => {
+firstElement = (iterable = []) => {
   return iterable[Symbol.iterator]().next().value;
 };
 
 sequence = (f) => {
-  return async(iterable) => {
+  return async(iterable = []) => {
     var i, res, results;
     results = [];
     for (i of iterable) {

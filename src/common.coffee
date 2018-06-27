@@ -116,9 +116,9 @@ makeFrame = (keys = []) => (values) =>
     if values[i] isnt undefined then o[key] = values[i]
   o
 
-firstElement = (iterable) => iterable[Symbol.iterator]().next().value
+firstElement = (iterable = []) => iterable[Symbol.iterator]().next().value
 
-sequence = (f) => (iterable) =>
+sequence = (f) => (iterable = []) =>
   for i from iterable
     res = await f i
     if res?
