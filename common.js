@@ -217,8 +217,11 @@ apply = (func) => {
 };
 
 makeFrame = (keys = []) => {
-  return (values = []) => {
+  return (values) => {
     var o;
+    if (!Array.isArray(values)) {
+      return;
+    }
     o = {};
     keys.forEach((key, i) => {
       if (values[i] !== void 0) {

@@ -108,7 +108,9 @@ apply = (func) =>
   f = expandApply invokeAsync func
   (mapFunc) => mapFunc f
 
-makeFrame = (keys = []) => (values = []) =>
+makeFrame = (keys = []) => (values) =>
+  if not Array.isArray values
+    return
   o = {}
   keys.forEach (key, i) =>
     if values[i] isnt undefined then o[key] = values[i]
