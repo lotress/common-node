@@ -135,9 +135,8 @@ Test('sequence') (report) =>
     else undefined
 
   g = (x) ->
-    new Promise (resolve) =>
-      h = -> resolve f x
-      setTimeout h, 1000
+    delay(1000)()
+    .then => f x
 
   s = sequence(g) number()
   report seq: 0

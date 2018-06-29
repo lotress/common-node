@@ -35,7 +35,7 @@ import {
 
 `identity = x => x`
 
-`None = () => void 0`
+`None = _ => void 0`
 
 `logInfo` and `logError` are alias for `console.log` and `console.error`
 
@@ -60,9 +60,9 @@ at least one of two callbacks is required
 - Example
 
 ```javascript
-let f = M(x => new Promise(resolve => setTimeout((() => resolve(x)), 1000)))
+let f = M(x => new Promise(resolve => setTimeout((_ => resolve(x)), 1000)))
 .then(x => logInfo(x))
-.then(() => new Promise((_, reject) => setTimeout((() => reject('wrong')), 1000)))
+.then(_ => new Promise((_, reject) => setTimeout((_ => reject('wrong')), 1000)))
 .catch(e => logError(e))
 
 // do something
@@ -108,7 +108,7 @@ let f = time => {
   let h = raceAwait([g, deadline(life)])
   logInfo(`race began with time interval ${time}ms`)
   let start = Date.now()
-  return h().then(() => {
+  return h().then(_ => {
     logInfo(`after 600ms, race ends`)
   }).catch(e => {
     logError(`after 1000ms, life ends`)
@@ -140,7 +140,7 @@ else reject with the error it thrown
 ```javascript
 let f = (times = 3) => {
   var count = 0
-  return () => {
+  return _ => {
     count += 1
     if (count < times)
       throw new Error(`${count} < ${times}`)
@@ -175,12 +175,8 @@ let number = function*() {
 
 let f = x => x < 5 ? x : void 0
 
-let g = x => {
-  return new Promise((resolve) => {
-    var h = () => resolve(f(x))
-    return setTimeout(h, 1000);
-  })
-}
+let g = x => delay(1000)()
+  .then(_ => f(x))
 
 console.log(await sequence(g)(number())) // [1, 2, 3, 4] after 5s
 ```
@@ -229,9 +225,9 @@ seq for monotonous increase sequence number, pass if seq number is larger than l
 ```javascript
 Test('example test')(report =>
   let start = Date.now()
-  let p = new Promise(resolve => setTimeout(resolve, 1000))
+  let p = delay(1000)()
 
-  p.then(() => report({seq: 2, assert: Date.now() - start > 999}))
+  p.then(_ => report({seq: 2, assert: Date.now() - start > 999}))
 
   report({seq: 1})
 )
