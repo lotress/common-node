@@ -59,7 +59,7 @@ assert = (flag) => {
 
 assertSeq = () => {
   var count;
-  count = 0;
+  count = -2e308;
   return (c) => {
     if (count > c) {
       throw new Error('wrong sequence');

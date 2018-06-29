@@ -216,7 +216,7 @@ in test procedure, you can return a ReportObject or call reportFn with a ReportO
 
 there are two kind of assertion now,
 assert for a boolean value, pass if the value is truly;
-seq for monotonous increase sequence number, pass if seq number is larger than last called, initial value for seq number is 0
+seq for monotonous increase sequence number, pass if seq number is larger than last called, initial value for seq number is -Infinity
 
 `ReportObject: {assert?: boolean, seq?: number}`
 

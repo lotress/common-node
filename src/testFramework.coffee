@@ -36,7 +36,7 @@ assert = (flag) =>
   flag
 
 assertSeq = =>
-  count = 0
+  count = -Infinity
   (c) =>
     if count > c
       throw new Error 'wrong sequence'
