@@ -99,7 +99,7 @@ Test('death race') (report) =>
       report assert: e is life
       report assert: Date.now() - start >= e
       logInfo "after #{Date.now() - start}ms,
-        should resolve when time interval > #{e} / 6"
+        should reject when time interval > #{e} / 6"
 
   f 100
   f 200
