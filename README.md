@@ -239,3 +239,8 @@ Test('example test')(report =>
 npm install
 npm run-script build
 ```
+
+## Planned feature in v1.2
+
+- A tail recursion optimizer wrapping generator function, replace your `return` calls with `yield`
+- A priority queue, maybe implemented using Binomial Heap
