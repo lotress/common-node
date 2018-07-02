@@ -192,5 +192,6 @@ module.exports = {
   pushMap,
   logInfo,
   logError,
+  genLog,
   isFunction
 }

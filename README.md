@@ -37,11 +37,18 @@ import {
 
 `None = _ => void 0`
 
-`logInfo` and `logError` are alias for `console.log` and `console.error`
+`logInfo` and `logError` are alias for `console.log` and `console.error`,
+they are made by `genLog` with logLevel = 2,
+you can call `genLog` with your logLevel,
+less logLevel is more important.
 
 - Example
 
 ```javascript
+logInfo = genLog(1)(console.log.bind(console))
+
+logError = genLog(-1)(console.error.bind(console))
+
 logInfo(identity('hello')) // hello
 logError(None('wrong')) // undefined
 ```
