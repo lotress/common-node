@@ -16,6 +16,7 @@ _ = require './common'
 Test('lazy Monad') (report) =>
   status = 1
   seq = 3
+  res = []
   f = _.M (x) => x + 1
   .then (x) =>
     report seq: ++seq
@@ -28,17 +29,19 @@ Test('lazy Monad') (report) =>
   .catch (e) => report assert: e.message is 'wrong'
   .then => report seq: ++seq
 
-  report seq: 1
+  res.push report seq: 1
 
-  f 1
+  res.push f 1
 
-  report seq: 2
+  res.push report seq: 2
   status = 2
 
-  f 1
+  r = f 1
   .then => report seq: Infinity
+  res.push r
 
-  report seq: 3
+  res.push report seq: 3
+  Promise.all res
 
 Test('Monad handler type check') (report) =>
   try
@@ -54,21 +57,25 @@ Test('Immutable Monad') (report) =>
   f = _.M identity
   g = f.then => 1
   h = f.then => 2
-  [f, g, h].forEach (fn, i) =>
+  Promise.all [f, g, h].map (fn, i) =>
     fn i
     .then (x) => report assert: x is i
 
 Test('identity') (report) =>
   logInfo "test #2"
   x = {}
-  report assert: x is identity.apply @, [x, 1]
-  report assert: undefined is do identity
+  Promise.all [
+    report assert: x is identity.apply @, [x, 1]
+    report assert: undefined is do identity
+  ]
 
 Test('None') (report) =>
   logInfo "test #3"
   x = {}
-  report assert: undefined is None.apply @, [x, {}]
-  report assert: undefined is do None
+  Promise.all [
+    report assert: undefined is None.apply @, [x, {}]
+    report assert: undefined is do None
+  ]
 
 Test('wait with delay and deadline') (report) =>
   start = Date.now()
@@ -109,8 +116,10 @@ Test('death race') (report) =>
       logInfo "after #{Date.now() - start}ms,
         should reject when time interval > #{e} / 6"
 
-  f 100
-  f 200
+  Promise.all [
+    f 100
+    f 200
+  ]
 
 Test('retry') (report) =>
   f = (times = 3) =>
@@ -121,13 +130,15 @@ Test('retry') (report) =>
         throw new Error "#{count} < #{times}"
       return count
 
-  retry(f())(2)()
-  .then => report assert: false
-  .catch (e) => report assert: e.message is '2 < 3'
+  Promise.all [
+    retry(f())(2)()
+    .then => report assert: false
+    .catch (e) => report assert: e.message is '2 < 3'
 
-  retry(f())(3)()
-  .then (r) => report assert: r is 3
-  .catch => report assert: false
+    retry(f())(3)()
+    .then (r) => report assert: r is 3
+    .catch => report assert: false
+  ]
 
 Test('sequence') (report) =>
   number = ->
@@ -147,6 +158,8 @@ Test('sequence') (report) =>
     .then => f x
 
   s = sequence(g) number()
-  report seq: 0
-  a = await s
-  report assert: a.every (x, i) => x is i + 1
+  Promise.all [
+    report seq: 0
+    a = await s
+    report assert: a.every (x, i) => x is i + 1
+  ]
