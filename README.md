@@ -45,9 +45,9 @@ less logLevel is more important.
 - Example
 
 ```javascript
-logInfo = genLog(1)(console.log.bind(console))
+const logInfo = genLog(1)(console.log.bind(console))
 
-logError = genLog(-1)(console.error.bind(console))
+const logError = genLog(-1)(console.error.bind(console))
 
 logInfo(identity('hello')) // hello
 logError(None('wrong')) // undefined
@@ -96,7 +96,7 @@ f('world')
 
 `allAwait: (funcs: Array[input: *any -> output: any]) -> (args: Array[input]) -> Promise(-> Array[output])`
 
-`deadline: (funcs: Array[input: *any -> output: any]) -> (args: Array[input]) -> Promise(-> Array[output])`
+`raceAwait: (funcs: Array[input: *any -> output: any]) -> (args: Array[input]) -> Promise(-> Array[output])`
 
 args are passed to funcs with same index
 

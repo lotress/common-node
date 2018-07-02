@@ -1,6 +1,6 @@
 {
   "name": "common-node",
-  "version": "1.1.12",
+  "version": "1.1.13",
   "description": "routines library for my node.js projects",
   "main": "common.js",
   "devDependencies": {
