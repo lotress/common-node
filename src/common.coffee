@@ -56,28 +56,23 @@ M = do =>
     if onRejected and not isFunction onRejected
       throw new TypeError "Parameter onRejected isn't a Function"
     if onFulfilled or onRejected
-      @deferreds.push {onFulfilled, onRejected}
+      M (...args) => @(...args).then onFulfilled, onRejected
     else
       throw new TypeError 'Neither onFulfilled nor onRejected is a Function'
-    @
+
   reject = (onRejected) -> @then null, onRejected
+
   (f) =>
     if not isFunction f
       _t = f
       f = => _t
     if isFunction(f.then) and isFunction(f.catch)
       return f
-    deferreds = []
     r = (...args) ->
-      # everytime when r is called,
-      # we new a Promise and append every deferreds to it,
-      # so r is reinvokable
-      deferreds.reduce ((p, d) => p.then d.onFulfilled, d.onRejected)
-      , Promise.resolve().then => f ...args
-    r.deferreds = deferreds
+      await f ...args
     Object.assign r,
       # since M(f) is just a function and
-      # Promise.prototype.then will lift function to Promise, leaving Promise untouched.
+      # Promise.prototype.then will lift function to Promise, binding Promise as well.
       # we use .then alias for both .map and .bind in a typical Monad
       then: handler.bind r
       catch: reject.bind r

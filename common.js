@@ -106,17 +106,18 @@ M = (() => {
       throw new TypeError("Parameter onRejected isn't a Function");
     }
     if (onFulfilled || onRejected) {
-      this.deferreds.push({onFulfilled, onRejected});
+      return M((...args) => {
+        return this(...args).then(onFulfilled, onRejected);
+      });
     } else {
       throw new TypeError('Neither onFulfilled nor onRejected is a Function');
     }
-    return this;
   };
   reject = function(onRejected) {
     return this.then(null, onRejected);
   };
   return (f) => {
-    var _t, deferreds, r;
+    var _t, r;
     if (!isFunction(f)) {
       _t = f;
       f = () => {
@@ -126,21 +127,12 @@ M = (() => {
     if (isFunction(f.then) && isFunction(f.catch)) {
       return f;
     }
-    deferreds = [];
-    r = function(...args) {
-      // everytime when r is called,
-      // we new a Promise and append every deferreds to it,
-      // so r is reinvokable
-      return deferreds.reduce(((p, d) => {
-        return p.then(d.onFulfilled, d.onRejected);
-      }), Promise.resolve().then(() => {
-        return f(...args);
-      }));
+    r = async function(...args) {
+      return (await f(...args));
     };
-    r.deferreds = deferreds;
     return Object.assign(r, {
       // since M(f) is just a function and
-      // Promise.prototype.then will lift function to Promise, leaving Promise untouched.
+      // Promise.prototype.then will lift function to Promise, binding Promise as well.
       // we use .then alias for both .map and .bind in a typical Monad
       then: handler.bind(r),
       catch: reject.bind(r)

@@ -50,6 +50,14 @@ Test('Monad handler type check') (report) =>
   catch e
     report assert: e instanceof TypeError
 
+Test('Immutable Monad') (report) =>
+  f = _.M identity
+  g = f.then => 1
+  h = f.then => 2
+  [f, g, h].forEach (fn, i) =>
+    fn i
+    .then (x) => report assert: x is i
+
 Test('identity') (report) =>
   logInfo "test #2"
   x = {}
