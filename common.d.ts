@@ -14,7 +14,9 @@ export function logError(message?: any, ...optionalParams: any[]): void
 **/
 export function genLog(level: number): (printFn: PrintFn) => PrintFn
 
-type MonadFunction<T> = {
+type RejectCallback<E> = ((error: any) => E | PromiseLike<E>) | MonadFunction<E>
+type ResolveCallback<T, U> = ((value: T) => U | PromiseLike<U>) | MonadFunction<U>
+declare interface MonadFunction<T> {
   /**
    * Execute the original function.
    * @param any The parameters for the original executor function.
@@ -26,24 +28,24 @@ type MonadFunction<T> = {
    * @param onrejected The callback function to execute when the Promise is rejected.
    * @returns A MonadFunction for the completion of the callback.
    */
-  catch<EResult = never>
-    (onRejected: ((error: any) => EResult | Promise<EResult>) | MonadFunction<EResult>): MonadFunction<T | EResult>
+  catch<E = never>(onRejected: RejectCallback<E>): MonadFunction<T | E>
   /**
    * Attaches callbacks for the resolution and/or rejection of the MonadFunction.
    * @param onfulfilled The callback function to execute when the Promise is resolved.
    * @param onrejected The callback function to execute when the Promise is rejected.
    * @returns A MonadFunction for the completion of which ever callback is executed.
    */
-  then<U, E = never>(onFulfilled?: ((value: T) => U | Promise<U>) | MonadFunction<U>,
-    onRejected?: ((error: any) => E | Promise<E>) | MonadFunction<E>): MonadFunction<U | E>
+  then<U, E = never>(onFulfilled?: ResolveCallback<T, U>, onRejected?: RejectCallback<E>): MonadFunction<U | E>
 }
 
 /**
   Decorate a function with Continuation Monad methods.
-  @param f Any function, other value will be wrapped in a function returning the value.
+  @param f Any function,
+    MonadFunction compatible value will be directly returned,
+    other value will be wrapped in a function returning the value.
   @returns The decorated monad.
 **/
-export function M<T, E = never>(f: ((...any) => T | E) | Promise<T | E>): MonadFunction<T | E>
+export function M<T, E = never>(f: ((...any) => T | E) | PromiseLike<T | E> | T): MonadFunction<T | E>
 
 /**
   Returns a function when called, it resolves with timeout after timeout milliseconds passed
@@ -74,7 +76,7 @@ export function raceAwait(funcs: ((...any) => any)[]): (args: any[][]) => Promis
   @throws Reject with undefined if retryCount given is 0.
   @throws Reject with the error thrown by the original function if it didn't success until retryCount reached.
 **/
-export function retry<T, E = never>(f: (...any) => T | Promise<T | E>): (retryCount: number)
+export function retry<T, E = never>(f: (...any) => T | PromiseLike<T | E>): (retryCount: number)
   => (...any) => Promise<T | E>
 
 /**
@@ -85,4 +87,5 @@ until the Iterable reached end or the function returned undefined or null.
 @param iterable The Iterable as its argument.
 @returns All non-null results of the function.
 **/
-export function sequence<I, T>(f: (I) => T | Promise<T> | undefined | null): (iterable: Iterable<I>) => Promise<T[]>
+export function sequence<I, T>(f: (I) => NonNullable<T> | PromiseLike<NonNullable<T>> | undefined | null):
+  (iterable: Iterable<I>) => Promise<NonNullable<T>[]>
