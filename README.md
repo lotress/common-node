@@ -1,10 +1,10 @@
 # common-node
 ----
 ## What's this?
-A routine library for my javascript projects
+A routine library simplify functional asynchronous javascript.
 
 ## Requirements
-A JavaScript runtime supports most ES6 features and ES7 async/await, e.g Node.js >= v8.0
+A JavaScript runtime supports most ES6 features and ES7 async/await, e.g Node.js >= v10.0.
 
 ## Install
 ```bash
@@ -12,7 +12,7 @@ npm install --save-prod lotress/common-node
 ```
 
 ## Usage
-See [test](./src/test.coffee) for examples of APIs
+See [test](./src/test.coffee) for examples of APIs.
 
 ### Javascript Library
 
@@ -53,14 +53,15 @@ logInfo(identity('hello')) // hello
 logError(None('wrong')) // undefined
 ```
 ----
-`M` takes a function, wrap it into a Monad which can be called as the original function, with additional `.then` and `.catch` interface
+`M` takes a function, wrap it into a Monad which can be called as the original function,
+with additional `.then` and `.catch` interface.
 
 `M: (input: *any -> output: any) -> ContinuationMonad`
 
 `ContinuationMonad: input -> Promise(-> output)`
 
 `ContinuationMonad.then: (onFulfilled: (input: output -> output: any)?, onRejected: (reason: any -> any)?) -> ContinuationMonad`
-at least one of two callbacks is required
+at least one of two callbacks is required.
 
 `ContinuationMonad.catch: (onRejected: (reason: any -> any)) -> ContinuationMonad`
 
@@ -86,13 +87,13 @@ f('world')
 // log error 'wrong'
 ```
 ----
-`delay` and `deadline` are functions return a Promise resolve/reject after given timeout
+`delay` and `deadline` are functions return a Promise resolve/reject after given timeout.
 
 `delay: (time: number) -> () -> Promise(-> time)`
 
 `deadline: (time: number) -> () -> Promise(-> time)`
 
-`allAwait` and `raceAwait` are lazy modification of Promise.all and Promise.race
+`allAwait` and `raceAwait` are lazy modification of Promise.all and Promise.race.
 
 `allAwait: (funcs: Array[input: *any -> output: any]) -> (args: Array[input]) -> Promise(-> Array[output])`
 
@@ -138,7 +139,7 @@ log error 'after 1000ms, life ends'
 returns a wrapped function with same input parameters,
 call this wrapped function will repeatly try the original one until it didn't throw or retry count met,
 return a Promise, if the original function didn't throw then resolve its return value,
-else reject with the error it thrown
+else reject with the error it thrown.
 
 `retry: (input: *any -> output: any) -> (retryCount: number) -> (input: *any) -> Promise(-> output)`
 
@@ -165,9 +166,9 @@ retry(f())(3)()
 `sequence` takes a function then a iterable object,
 sequential apply and wait the function on elements of the iterable,
 loop ends if the function returns `null` or `undefined` or reached the end of the iterable,
-results return in an Array.
+if `memory` is `true` then results will be returned in an Array, else returns `undefined`.
 
-`sequence: (input: any -> output: any) -> (iter: iterable) -> Promise(-> array[output])`
+`sequence: (input: any -> output: any, memory = true) -> (iter: iterable) -> Promise(-> array[output])`
 
 - Example, see `Test('sequence')` in [test](./src/test.coffee)
 
@@ -187,10 +188,52 @@ let g = x => delay(1000)()
 
 console.log(await sequence(g)(number())) // [1, 2, 3, 4] after 5s
 ```
+----
+`isGenerator` checks if the given object is a Generator.
+Given g as input, it returns True if g is a Generator, g if g is falsy, otherwise false.
+
+`isGenerator: any -> boolean`
+
+`tco` is a tail call optimizer utilizing generator function.
+For a recursive function f without `yield` and only recurse on tail,
+replace its tail call's `return` with `yield`,
+so it becomes a `GeneratorFunction`, then wrap it by `tco`,
+the result function should work the same as the original recursive function without piling stack.
+
+`tco: (f: GeneratorFunction) -> ...any -> any`
+
+- Example, see `Test('sequence')` in [test](./src/test.coffee)
+
+#### The classic style of a resursive function
+
+```javascript
+const countR = n => n < 1 ? n : 1 + countR(n - 1)
+
+try {
+  countR(1e7)
+} catch (e) {
+  console.log(e.toString()) // RangeError: Maximum call stack size exceeded
+}
+```
+
+#### The optimized style
+
+```javascript
+const countG = function*(n, res) {
+  if (n < 1)
+    yield n
+  else
+    yield countG(n - 1, res + 1)
+}
+
+let count = tco(countG)
+
+console.log(count(1e7)) // 10000000
+```
 
 ### Node.js Library
 
-Routines for node.js environment are in ``common-node.js``
+Routines for node.js environment are in ``common-node.js``.
 
 ```javascript
 import {getFullPath} from 'common-node/common-node'
@@ -207,25 +250,30 @@ console.log(path) // ${cwd}\common\common.js under Windows
 
 ### Test Framework
 
-A framework for unit test in `testFramework.js`
+A framework for unit test in `testFramework.js`.
 
 ```javascript
 import {Test} from 'common-node/testFramework'
 ```
 
-For each test case, call Test with description and you test procedure
+For each test case, call Test with description and you test procedure.
 
-`Test: (description: string) -> ((report: reportFn) -> ReportObject?) -> Promise(-> boolean)`
+`Test: (description: string) -> ((report: ReportObject) -> Promise | undefined) -> Promise(-> boolean)`
 
-in test procedure, you can return a ReportObject or call reportFn with a ReportObject for an assertion
+In test procedure, you can call a reportFn in the given ReportObject for an assertion.
 
-`reportFn: ReportObject -> Promise(-> true) | Promise.reject()`
-
-there are two kind of assertion now,
-assert for a boolean value, pass if the value is truly;
-seq for monotonous increase sequence number, pass if seq number is larger than last called, initial value for seq number is -Infinity
+There are two kind of assertion now,
+`assert` for a boolean value, pass if the value is truly;
+`assertSeq` for monotonous increase sequence number,
+pass if seq number is larger than last called,
+initial value for seq number is -Infinity.
+A optional message can be given to log when assertion failed.
 
 `ReportObject: {assert?: boolean, seq?: number}`
+
+`report.assert: (boolean | Promise(-> boolean), message = 'assert failed') -> Promise(-> boolean)`
+
+`report.assertSeq: (number | Promise(-> number), message = 'wrong sequence') -> Promise(-> boolean)`
 
 - Example
 
@@ -234,9 +282,15 @@ Test('example test')(report =>
   let start = Date.now()
   let p = delay(1000)()
 
-  p.then(_ => report({seq: 2, assert: Date.now() - start > 999}))
+  p.then(_ => {
+    return Promise.all([
+      report.assertSeq(2)
+      report.assert(Date.now() - start > 999)
+    ])
+  })
 
-  report({seq: 1})
+  report.assertSeq(1)
+  return p
 )
 ```
 
@@ -249,5 +303,4 @@ npm run-script build
 
 ## Planned feature in v1.2
 
-- A tail recursion optimizer wrapping generator function, replace your `return` calls with `yield`
-- A priority queue, maybe implemented using Binomial Heap
+- A priority queue, I'm considering implemention using Binary or Binomial Heap.

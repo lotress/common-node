@@ -9,38 +9,43 @@ _ = require './common'
   allAwait,
   raceAwait,
   sequence,
-  logInfo,
+  isGenerator,
+  tco,
+  genLog,
   logError
 } = _
 
+logInfo = genLog 2
+
 Test('lazy Monad') (report) =>
+  {assert, assertSeq} = report
   status = 1
   seq = 3
   res = []
   f = _.M (x) => x + 1
   .then (x) =>
-    report seq: ++seq
+    assertSeq ++seq
     x
-  .then (x) => report assert: x is 2
-  .then => report assert: status is 2
+  .then (x) => assert x is 2
+  .then => assert status is 2
   .then =>
     throw new Error 'wrong'
-  .then => report assert: false
-  .catch (e) => report assert: e.message is 'wrong'
-  .then => report seq: ++seq
+  .then => assert false
+  .catch (e) => assert e.message is 'wrong'
+  .then => assertSeq ++seq
 
-  res.push report seq: 1
+  res.push assertSeq 1
 
   res.push f 1
 
-  res.push report seq: 2
+  res.push assertSeq 2
   status = 2
 
   r = f 1
-  .then => report seq: Infinity
+  .then => assertSeq Infinity
   res.push r
 
-  res.push report seq: 3
+  res.push assertSeq 3
   Promise.all res
 
 Test('Monad handler type check') (report) =>
@@ -51,7 +56,7 @@ Test('Monad handler type check') (report) =>
     .then => throw new Error 'wrong'
     f 1
   catch e
-    report assert: e instanceof TypeError
+    report.assert e instanceof TypeError
 
 Test('Immutable Monad') (report) =>
   f = _.M identity
@@ -59,29 +64,28 @@ Test('Immutable Monad') (report) =>
   h = f.then => 2
   Promise.all [f, g, h].map (fn, i) =>
     fn i
-    .then (x) => report assert: x is i
+    .then (x) => report.assert x is i
 
 Test('identity') (report) =>
-  logInfo "test #2"
   x = {}
   Promise.all [
-    report assert: x is identity.apply @, [x, 1]
-    report assert: undefined is do identity
+    report.assert x is identity.apply @, [x, 1]
+    report.assert undefined is do identity
   ]
 
 Test('None') (report) =>
-  logInfo "test #3"
   x = {}
   Promise.all [
-    report assert: undefined is None.apply @, [x, {}]
-    report assert: undefined is do None
+    report.assert undefined is None.apply @, [x, {}]
+    report.assert undefined is do None
   ]
 
 Test('wait with delay and deadline') (report) =>
   start = Date.now()
   timing = (time) => do delay time
   interval = (k) => (time) =>
-    report assert: Date.now() - start >= time * k
+    time = time.message if time.message?
+    report.assert Date.now() - start >= time * k
     time
   f = _.M timing
   .then interval 1
@@ -93,6 +97,7 @@ Test('wait with delay and deadline') (report) =>
   f 100
 
 Test('death race') (report) =>
+  {assert} = report
   life = 1000
   f = (time) =>
     a = allAwait [identity, delay(time), delay time * 2]
@@ -102,17 +107,18 @@ Test('death race') (report) =>
     .then None
     .then a
     .then =>
-      report assert: Date.now() - start >= time * 6
+      assert Date.now() - start >= time * 6
     h = raceAwait [g, deadline life]
     logInfo "race began with time interval #{time}ms"
     start = Date.now()
     h().then =>
-      report assert: Date.now() - start < life
+      assert Date.now() - start < life
       logInfo "after #{Date.now() - start}ms,
         should resolve when time interval < #{life} / 6"
     .catch (e) =>
-      report assert: e is life
-      report assert: Date.now() - start >= e
+      e = +e.message
+      assert e is life
+      assert Date.now() - start >= e
       logInfo "after #{Date.now() - start}ms,
         should reject when time interval > #{e} / 6"
 
@@ -122,6 +128,7 @@ Test('death race') (report) =>
   ]
 
 Test('retry') (report) =>
+  {assert} = report
   f = (times = 3) =>
     count = 0
     =>
@@ -132,15 +139,16 @@ Test('retry') (report) =>
 
   Promise.all [
     retry(f())(2)()
-    .then => report assert: false
-    .catch (e) => report assert: e.message is '2 < 3'
+    .then => assert false
+    .catch (e) => assert e.message is '2 < 3'
 
     retry(f())(3)()
-    .then (r) => report assert: r is 3
-    .catch => report assert: false
+    .then (r) => assert r is 3
+    .catch => assert false
   ]
 
 Test('sequence') (report) =>
+  {assert, assertSeq} = report
   number = ->
     n = 1
     while true
@@ -149,7 +157,7 @@ Test('sequence') (report) =>
 
   f = (x) ->
     if x < 5
-      report seq: x
+      assertSeq x
       x
     else undefined
 
@@ -159,7 +167,47 @@ Test('sequence') (report) =>
 
   s = sequence(g) number()
   Promise.all [
-    report seq: 0
+    assertSeq 0
     a = await s
-    report assert: a.every (x, i) => x is i + 1
+    assert a.every (x, i) => x is i + 1
   ]
+
+Test('isGenerator') (report) =>
+  number = ->
+    n = 1
+    while true
+      yield n++
+    return
+
+  Promise.all [
+    report.assert not isGenerator number
+    report.assert isGenerator number()
+  ]
+
+Test('tail call optimization') (report) =>
+  {assert} = report
+  countFn = (n, res = 0) ->
+    if n <= 1
+      yield res + n
+    else
+      yield countFn(n - 1, res + 1)
+
+  countR = (n) =>
+    if n <= 1 then n
+    else 1 + countR n - 1
+
+  try
+    tco identity
+    await assert false
+  catch e
+    await assert e.name is 'TypeError'
+
+  count = tco countFn
+
+  await assert count 1e7
+
+  try
+    countR 1e7
+    await assert false
+  catch e
+    await assert e.name is 'RangeError'

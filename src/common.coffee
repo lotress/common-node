@@ -29,6 +29,9 @@ isSymmetry = (f) =>
 isIterable = (x) => isObject(x) and x[Symbol.iterator]
 getIterator = (x) => x[Symbol.iterator]()
 isMultiIterable = (x) => isIterable(x) and not isSymmetry(getIterator) x
+iter = (-> yield).prototype.constructor
+isGenerator = (g) => g and g.constructor is iter
+isGeneratorFunction = (g) => g and g[Symbol.toStringTag] is 'GeneratorFunction'
 
 mapList = (func) => (list) ->
   for item from list
@@ -37,6 +40,20 @@ mapList = (func) => (list) ->
       yield* x
     else
       yield x
+
+tco = (f) =>
+  if not isGeneratorFunction f
+    throw new TypeError 'Parameter is not a GeneratorFunction'
+  (...args) =>
+    i = f ...args
+    loop
+      {value, done} = i.next()
+      if isGenerator value
+        i = value
+      else if done
+        break
+      else res = value
+    res
 
 # M constructs a Monad wrapping a deferred function using Promise
 # M(f) is lazy and reinvokable just like a plain function
@@ -113,13 +130,21 @@ makeFrame = (keys = []) => (values) =>
 
 firstElement = (iterable = []) => iterable[Symbol.iterator]().next().value
 
-sequence = (f) => (iterable = []) =>
-  for i from iterable
-    res = await f i
-    if res?
-      res
-    else
-      break
+sequence = (f, memory = true) =>
+  if memory
+    (iterable = []) =>
+      for i from iterable
+        res = await f i
+        if res?
+          res
+        else
+          break
+  else
+    (iterable = []) =>
+      for i from iterable
+        if not (await f i)?
+          break
+      return
 
 pall = (fn) =>
   if not isFunction fn
@@ -141,18 +166,20 @@ delay = (timeout) => =>
     setTimeout (=> resolve(timeout)), timeout
 
 deadline = (timeout) => =>
+  reason = new Error timeout
   new Promise (resolve, reject) =>
-    setTimeout (=> reject(timeout)), timeout
+    setTimeout (=> reject reason), timeout
 
 retry = (f) =>
   if not isFunction f
     throw new TypeError 'Parameter is not a Function'
+  noTry = new Error 'try count is 0'
   (count = 1) =>
     count = +count
     if not(count >= 0)
       throw new Error 'Retry count is negative or NaN'
     (...args) =>
-      do g = (e = undefined) =>
+      do g = (e = noTry) =>
         if count--
           Promise.resolve().then => f ...args
           .catch g
@@ -190,8 +217,10 @@ module.exports = {
   firstElement,
   sequence,
   pushMap,
+  isFunction,
+  isGenerator,
+  tco,
   logInfo,
   logError,
-  genLog,
-  isFunction
+  genLog
 }

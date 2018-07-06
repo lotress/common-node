@@ -89,3 +89,20 @@ until the Iterable reached end or the function returned undefined or null.
 **/
 export function sequence<I, T>(f: (I) => NonNullable<T> | PromiseLike<NonNullable<T>> | undefined | null):
   (iterable: Iterable<I>) => Promise<NonNullable<T>[]>
+
+/**
+Check if the given object is a Generator.
+@param g The object to check.
+@returns True if g is a Generator, g if g is falsy, otherwise false.
+**/
+export function isGenerator(g: any): boolean
+
+/**
+For a recursive function f without yield and only recurse on tail,
+replace its tail call's `return` with `yield`,
+so it becomes a `GeneratorFunction`, then wrap it by `tco`,
+the result function should work the same as the original recursive function without piling stack.
+@param f The GeneratorFunction.
+@returns Tail call optimizied function.
+**/
+export function tco(f: GeneratorFunction): (...any) => any

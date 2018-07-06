@@ -1,57 +1,44 @@
 {logInfo, logError, isFunction} = require './common'
 logFail = (description) => (e) =>
-  logError "Test #{description} failed with message: #{e.message}"
+  logError "Test #{description} failed"
+  logError e if e?
   false
 
 Test = (description) =>
   fail = logFail description
-  assertBy = AssertBy do Asserts
+  flag = true
+  report = {}
+  for own key, value of do Asserts
+    report[key] = do (value) => (...args) =>
+      value ...args
+      .catch fail
+      .then (res) =>
+        flag = flag and !!res
 
   (testFn) =>
-    flag = true
-    failPass = (e) =>
-      flag = false
-      fail e
-      throw e
-    report = (o) =>
-      if flag
-        Promise.resolve o
-        .then (o) => await assertBy o
-        .catch failPass
-        .then => flag
-      else throw o
     Promise.resolve()
-    .then => await testFn report
-    .then (o) =>
-      if flag
-        await assertBy o
-      else throw o
+    .then => testFn report
     .then =>
-      if flag then logInfo "Test #{description} passed"
-      flag
+      if flag
+        logInfo "Test #{description} passed"
+      else do fail
     .catch fail
 
-assert = (flag) =>
-  if not flag then throw new Error 'assert failed'
-  flag
+assert = (flag, message = 'assert failed') =>
+  flag = await flag
+  if not flag then throw new Error message
+  true
 
 assertSeq = =>
   count = -Infinity
-  (c) =>
+  (c, message = 'wrong sequence') =>
+    c = await c
     if count > c
-      throw new Error 'wrong sequence'
+      throw new Error message
     else
       if isFinite(c) or c is Infinity then count = +c
       true
 
-AssertBy = (asserts) => (o) =>
-  p = []
-  for key, value of o when isFunction asserts[key]
-    p.push Promise.resolve asserts[key] value
-  Promise.all p
-  .then (res) => res.every (flag) => !!flag
-  .then assert
-
-Asserts = => {assert, seq: do assertSeq}
+Asserts = => {assert, assertSeq: do assertSeq}
 
 module.exports = Test
