@@ -17,8 +17,7 @@ _ = require './common'
 
 logInfo = genLog 2
 
-Test('lazy Monad') (report) =>
-  {assert, assertSeq} = report
+Test('lazy Monad') ({assert, assertSeq}) =>
   status = 1
   seq = 3
   res = []
@@ -96,8 +95,7 @@ Test('wait with delay and deadline') (report) =>
 
   f 100
 
-Test('death race') (report) =>
-  {assert} = report
+Test('death race') ({assert}) =>
   life = 1000
   f = (time) =>
     a = allAwait [identity, delay(time), delay time * 2]
@@ -127,28 +125,31 @@ Test('death race') (report) =>
     f 200
   ]
 
-Test('retry') (report) =>
-  {assert} = report
-  f = (times = 3) =>
-    count = 0
-    =>
-      count += 1
-      if count < times
-        throw new Error "#{count} < #{times}"
-      return count
+Test('retry') ({assert}) =>
+  f = do (times = 3) => (count = 0) => =>
+    count += 1
+    if count < times
+      throw new Error "#{count} < #{times}"
+    return count
+
+  g = retry(f()) 3
 
   Promise.all [
     retry(f())(2)()
     .then => assert false
     .catch (e) => assert e.message is '2 < 3'
 
-    retry(f())(3)()
+    g()
     .then (r) => assert r is 3
+    .catch => assert false
+
+    delay(1000)()
+    .then g
+    .then (r) => assert r is 4
     .catch => assert false
   ]
 
-Test('sequence') (report) =>
-  {assert, assertSeq} = report
+Test('sequence') ({assert, assertSeq}) =>
   number = ->
     n = 1
     while true
@@ -184,8 +185,7 @@ Test('isGenerator') (report) =>
     report.assert isGenerator number()
   ]
 
-Test('tail call optimization') (report) =>
-  {assert} = report
+Test('tail call optimization') ({assert}) =>
   countFn = (n, res = 0) ->
     if n <= 1
       yield res + n

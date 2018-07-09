@@ -349,9 +349,10 @@ retry = (f) => {
       throw new Error('Retry count is negative or NaN');
     }
     return (...args) => {
-      var g;
+      var c, g;
+      c = count;
       return (g = (e) => {
-        if (count--) {
+        if (c--) {
           return Promise.resolve().then(() => {
             return f(...args);
           }).catch(g);

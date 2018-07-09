@@ -1,7 +1,7 @@
 # common-node
 ----
 ## What's this?
-A routine library simplify functional asynchronous javascript.
+A routine library simplifies functional asynchronous javascript.
 
 ## Requirements
 A JavaScript runtime supports most ES6 features and ES7 async/await, e.g Node.js >= v10.0.

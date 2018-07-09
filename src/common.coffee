@@ -179,8 +179,9 @@ retry = (f) =>
     if not(count >= 0)
       throw new Error 'Retry count is negative or NaN'
     (...args) =>
+      c = count
       do g = (e = noTry) =>
-        if count--
+        if c--
           Promise.resolve().then => f ...args
           .catch g
         else
