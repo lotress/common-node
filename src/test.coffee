@@ -3,6 +3,7 @@ _ = require './common'
 {
   identity,
   None,
+  isFunction,
   delay,
   deadline,
   retry,
@@ -11,6 +12,7 @@ _ = require './common'
   sequence,
   isGenerator,
   tco,
+  BinaryHeap,
   genLog,
   logError
 } = _
@@ -211,3 +213,14 @@ Test('tail call optimization') ({assert}) =>
     await assert false
   catch e
     await assert e.name is 'RangeError'
+
+Test('Priority Queue') ({assert}) =>
+  queue = [2, 1, 4].reduce ((queue, x) => queue.push x)
+  , new BinaryHeap()
+  assert isFunction queue.push
+  assert isFunction queue.peek
+  assert isFunction queue.pop
+  queue.push 3
+  assert queue.peek() is 1
+  assert [1, 2, 3, 4].reduce ((flag, x) => flag and x is queue.pop())
+  , true

@@ -230,6 +230,9 @@ let count = tco(countG)
 
 console.log(count(1e7)) // 10000000
 ```
+----
+After comparing the performance of several priority queue implementation,
+we implemented a `BinaryHeap` using a typed key array.
 
 ### Node.js Library
 
@@ -300,7 +303,3 @@ Test('example test')(report =>
 npm install
 npm run-script build
 ```
-
-## Planned feature in v1.2
-
-- A priority queue, I'm considering implemention using Binary or Binomial Heap.

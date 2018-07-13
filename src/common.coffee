@@ -187,6 +187,73 @@ retry = (f) =>
         else
           Promise.reject e
 
+MinCapacity = 128
+getCapacity = (length) =>
+  res = 1 << 32 - Math.clz32 length
+  if res < MinCapacity then MinCapacity else res
+
+BinaryHeap = class
+  constructor: (@Type = Float64Array) ->
+    @data = [null]
+    @capacity = MinCapacity
+    @length = 0
+    @_newCapacity()
+    return
+
+  _newCapacity: ->
+    @capacity = getCapacity @length
+    arr = new @Type new ArrayBuffer(@capacity * @Type.BYTES_PER_ELEMENT)
+    if @length
+      arr.set @keys
+    @keys = arr
+    return
+
+  _swap: (i, j) ->
+    [t, k] = [@data[i], @keys[i]]
+    [@data[i], @keys[i]] = [@data[j], @keys[j]]
+    [@data[j], @keys[j]] = [t, k]
+    return
+
+  push: (key, value) ->
+    @data.push value
+    @length += 1
+    if @length >= @capacity
+      @_newCapacity()
+    @keys[@length] = key
+    i = @length
+    j = i >> 1
+    while j and @keys[j] > @keys[i]
+      @_swap i, j
+      i = j
+      j = j >> 1
+    @
+
+  pop: ->
+    if @length < 1
+      return undefined
+    res = do @peek
+    i = 1
+    j = 2
+    while j < @length
+      t = if @keys[j] > @keys[j + 1] then 1 else 0
+      j += t
+      @_swap i, j
+      i = j
+      j = i << 1
+    @_swap i, @length
+    do @data.pop
+    @length -= 1
+    res
+
+  peek: ->
+    if @length < 1
+      return undefined
+    res = @data[1]
+    if res?
+      {key: @keys[1], value: res}
+    else
+      @keys[1]
+
 logLevel = 2
 
 genLog = do (logLevel) => (level) => (func) =>
@@ -221,6 +288,7 @@ module.exports = {
   isFunction,
   isGenerator,
   tco,
+  BinaryHeap,
   logInfo,
   logError,
   genLog
