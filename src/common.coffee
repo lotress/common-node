@@ -192,67 +192,92 @@ getCapacity = (length) =>
   res = 1 << 32 - Math.clz32 length
   if res < MinCapacity then MinCapacity else res
 
-BinaryHeap = class
-  constructor: (@Type = Float64Array) ->
-    @data = [null]
-    @capacity = MinCapacity
-    @length = 0
-    @_newCapacity()
-    return
+BinaryHeap = ({Type = Float64Array, simple = false}) ->
+  newCapacity = (keys) =>
+    capacity = getCapacity length
+    arr = new Type new ArrayBuffer(capacity * Type.BYTES_PER_ELEMENT)
+    if length
+      arr.set keys
+    return arr
 
-  _newCapacity: ->
-    @capacity = getCapacity @length
-    arr = new @Type new ArrayBuffer(@capacity * @Type.BYTES_PER_ELEMENT)
-    if @length
-      arr.set @keys
-    @keys = arr
-    return
+  data = [null]
+  capacity = MinCapacity
+  length = 0
+  keys = newCapacity()
 
-  _swap: (i, j) ->
-    [t, k] = [@data[i], @keys[i]]
-    [@data[i], @keys[i]] = [@data[j], @keys[j]]
-    [@data[j], @keys[j]] = [t, k]
-    return
+  swap = if simple
+    (i, j) =>
+      k = keys[i]
+      keys[i] = keys[j]
+      keys[j] = k
+      return
+  else
+    (i, j) =>
+      [t, k] = [data[i], keys[i]]
+      [data[i], keys[i]] = [data[j], keys[j]]
+      [data[j], keys[j]] = [t, k]
+      return
 
-  push: (key, value) ->
-    @data.push value
-    @length += 1
-    if @length >= @capacity
-      @_newCapacity()
-    @keys[@length] = key
-    i = @length
+  insert = (key) =>
+    length += 1
+    if length >= capacity
+      keys = newCapacity keys
+    keys[length] = key
+    i = length
     j = i >> 1
-    while j and @keys[j] > @keys[i]
-      @_swap i, j
+    while j and keys[j] > keys[i]
+      swap i, j
       i = j
       j = j >> 1
-    @
+    heap
 
-  pop: ->
-    if @length < 1
-      return undefined
-    res = do @peek
+  push = if simple
+    insert
+  else
+    (key, value) =>
+      data.push value
+      insert key
+
+  removeMin = =>
     i = 1
     j = 2
-    while j < @length
-      t = if @keys[j] > @keys[j + 1] then 1 else 0
+    while j < length
+      t = if keys[j] > keys[j + 1] then 1 else 0
       j += t
-      @_swap i, j
+      swap i, j
       i = j
       j = i << 1
-    @_swap i, @length
-    do @data.pop
-    @length -= 1
-    res
+    swap i, length
+    length -= 1
 
-  peek: ->
-    if @length < 1
-      return undefined
-    res = @data[1]
-    if res?
-      {key: @keys[1], value: res}
-    else
-      @keys[1]
+  pop = if simple
+    =>
+      if length < 1
+        return undefined
+      res = keys[1]
+      removeMin()
+      res
+  else
+    =>
+      if length < 1
+        return undefined
+      res = [keys[1], data[1]]
+      data.pop()
+      removeMin()
+      res
+
+  peek = if simple
+    =>
+      if length < 1
+        return undefined
+      keys[1]
+  else
+    =>
+      if length < 1
+        return undefined
+      [keys[1], data[1]]
+
+  heap = {push, pop, peek}
 
 logLevel = 2
 

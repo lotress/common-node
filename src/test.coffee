@@ -14,6 +14,7 @@ _ = require './common'
   tco,
   BinaryHeap,
   genLog,
+  logInfo,
   logError
 } = _
 
@@ -216,7 +217,7 @@ Test('tail call optimization') ({assert}) =>
 
 Test('Priority Queue') ({assert}) =>
   queue = [2, 1, 4].reduce ((queue, x) => queue.push x)
-  , new BinaryHeap()
+  , new BinaryHeap {simple: true}
   assert isFunction queue.push
   assert isFunction queue.peek
   assert isFunction queue.pop

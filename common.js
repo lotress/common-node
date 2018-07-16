@@ -376,85 +376,96 @@ getCapacity = (length) => {
   }
 };
 
-BinaryHeap = class {
-  constructor(Type = Float64Array) {
-    this.Type = Type;
-    this.data = [null];
-    this.capacity = MinCapacity;
-    this.length = 0;
-    this._newCapacity();
-    return;
-  }
-
-  _newCapacity() {
-    var arr;
-    this.capacity = getCapacity(this.length);
-    arr = new this.Type(new ArrayBuffer(this.capacity * this.Type.BYTES_PER_ELEMENT));
-    if (this.length) {
-      arr.set(this.keys);
+BinaryHeap = function({Type = Float64Array, simple = false}) {
+  var capacity, data, heap, insert, keys, length, newCapacity, peek, pop, push, removeMin, swap;
+  newCapacity = (keys) => {
+    var arr, capacity;
+    capacity = getCapacity(length);
+    arr = new Type(new ArrayBuffer(capacity * Type.BYTES_PER_ELEMENT));
+    if (length) {
+      arr.set(keys);
     }
-    this.keys = arr;
-  }
-
-  _swap(i, j) {
+    return arr;
+  };
+  data = [null];
+  capacity = MinCapacity;
+  length = 0;
+  keys = newCapacity();
+  swap = simple ? (i, j) => {
+    var k;
+    k = keys[i];
+    keys[i] = keys[j];
+    keys[j] = k;
+  } : (i, j) => {
     var k, t;
-    [t, k] = [this.data[i], this.keys[i]];
-    [this.data[i], this.keys[i]] = [this.data[j], this.keys[j]];
-    [this.data[j], this.keys[j]] = [t, k];
-  }
-
-  push(key, value) {
+    [t, k] = [data[i], keys[i]];
+    [data[i], keys[i]] = [data[j], keys[j]];
+    [data[j], keys[j]] = [t, k];
+  };
+  insert = (key) => {
     var i, j;
-    this.data.push(value);
-    this.length += 1;
-    if (this.length >= this.capacity) {
-      this._newCapacity();
+    length += 1;
+    if (length >= capacity) {
+      keys = newCapacity(keys);
     }
-    this.keys[this.length] = key;
-    i = this.length;
+    keys[length] = key;
+    i = length;
     j = i >> 1;
-    while (j && this.keys[j] > this.keys[i]) {
-      this._swap(i, j);
+    while (j && keys[j] > keys[i]) {
+      swap(i, j);
       i = j;
       j = j >> 1;
     }
-    return this;
-  }
-
-  pop() {
-    var i, j, res, t;
-    if (this.length < 1) {
-      return void 0;
-    }
-    res = this.peek();
+    return heap;
+  };
+  push = simple ? insert : (key, value) => {
+    data.push(value);
+    return insert(key);
+  };
+  removeMin = () => {
+    var i, j, t;
     i = 1;
     j = 2;
-    while (j < this.length) {
-      t = this.keys[j] > this.keys[j + 1] ? 1 : 0;
+    while (j < length) {
+      t = keys[j] > keys[j + 1] ? 1 : 0;
       j += t;
-      this._swap(i, j);
+      swap(i, j);
       i = j;
       j = i << 1;
     }
-    this._swap(i, this.length);
-    this.data.pop();
-    this.length -= 1;
-    return res;
-  }
-
-  peek() {
+    swap(i, length);
+    return length -= 1;
+  };
+  pop = simple ? () => {
     var res;
-    if (this.length < 1) {
+    if (length < 1) {
       return void 0;
     }
-    res = this.data[1];
-    if (res != null) {
-      return res;
-    } else {
-      return this.keys[1];
+    res = keys[1];
+    removeMin();
+    return res;
+  } : () => {
+    var res;
+    if (length < 1) {
+      return void 0;
     }
-  }
-
+    res = [keys[1], data[1]];
+    data.pop();
+    removeMin();
+    return res;
+  };
+  peek = simple ? () => {
+    if (length < 1) {
+      return void 0;
+    }
+    return keys[1];
+  } : () => {
+    if (length < 1) {
+      return void 0;
+    }
+    return [keys[1], data[1]];
+  };
+  return heap = {push, pop, peek};
 };
 
 logLevel = 2;
