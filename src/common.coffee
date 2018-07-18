@@ -189,93 +189,102 @@ retry = (f) =>
 
 MinCapacity = 128
 getCapacity = (length) =>
-  res = 1 << 32 - Math.clz32 length
-  if res < MinCapacity then MinCapacity else res
+  if length < MinCapacity then MinCapacity else 1 << 32 - Math.clz32 length
 
-BinaryHeap = ({Type = Float64Array, simple = false}) ->
-  newCapacity = (keys) =>
-    capacity = getCapacity length
-    arr = new Type new ArrayBuffer(capacity * Type.BYTES_PER_ELEMENT)
-    if length
-      arr.set keys
-    return arr
+defaultHeapOptions = {Type: Float64Array, simple: false}
 
+BinaryHeap = (options = defaultHeapOptions) ->
+  {Type, simple} = Object.assign {}, defaultHeapOptions, options
   data = [null]
   capacity = MinCapacity
   length = 0
-  keys = newCapacity()
+  keys = {length: 0}
 
-  swap = if simple
+  do newCapacity = =>
+    capacity = getCapacity length
+    if capacity is keys.length then return
+    else if capacity > keys.length
+      arr = new Type new ArrayBuffer(capacity * Type.BYTES_PER_ELEMENT)
+      if keys
+        arr.set keys
+    else
+      arr = new Type keys.buffer, 0, capacity
+    keys = arr
+
+  assign = if simple
     (i, j) =>
-      k = keys[i]
       keys[i] = keys[j]
-      keys[j] = k
       return
   else
     (i, j) =>
-      [t, k] = [data[i], keys[i]]
-      [data[i], keys[i]] = [data[j], keys[j]]
-      [data[j], keys[j]] = [t, k]
+      keys[i] = keys[j]
+      data[i] = data[j]
       return
 
-  insert = (key) =>
-    length += 1
-    if length >= capacity
-      keys = newCapacity keys
-    keys[length] = key
-    i = length
+  up = (i) =>
+    k = keys[length]
     j = i >> 1
-    while j and keys[j] > keys[i]
-      swap i, j
+    while j and keys[j] > k
+      assign i, j
       i = j
       j = j >> 1
+    keys[i] = k
+    return i
+
+  insert = if simple
+    None
+  else
+    (value, i) => data[i] = value
+
+  push = (key, value) =>
+    length += 1
+    if length >= capacity
+      newCapacity()
+    keys[length] = key
+    insert value, up length
     heap
 
-  push = if simple
-    insert
-  else
-    (key, value) =>
-      data.push value
-      insert key
-
-  removeMin = =>
+  removeMin = (v) =>
+    k = keys[1]
     i = 1
     j = 2
     while j < length
       t = if keys[j] > keys[j + 1] then 1 else 0
       j += t
-      swap i, j
+      assign i, j
       i = j
       j = i << 1
-    swap i, length
+    if i < length
+      insert v, up i
     length -= 1
+    if length < capacity / 2
+      newCapacity()
+    k
 
   pop = if simple
     =>
       if length < 1
         return undefined
-      res = keys[1]
       removeMin()
-      res
   else
     =>
       if length < 1
         return undefined
       res = [keys[1], data[1]]
+      removeMin data[length]
       data.pop()
-      removeMin()
       res
 
   peek = if simple
     =>
       if length < 1
-        return undefined
-      keys[1]
+        undefined
+      else keys[1]
   else
     =>
       if length < 1
-        return undefined
-      [keys[1], data[1]]
+        undefined
+      else [keys[1], data[1]]
 
   heap = {push, pop, peek}
 

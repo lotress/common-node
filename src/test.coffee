@@ -217,7 +217,7 @@ Test('tail call optimization') ({assert}) =>
 
 Test('Priority Queue') ({assert}) =>
   queue = [2, 1, 4].reduce ((queue, x) => queue.push x)
-  , new BinaryHeap {simple: true}
+  , new BinaryHeap simple: true
   assert isFunction queue.push
   assert isFunction queue.peek
   assert isFunction queue.pop
@@ -225,3 +225,15 @@ Test('Priority Queue') ({assert}) =>
   assert queue.peek() is 1
   assert [1, 2, 3, 4].reduce ((flag, x) => flag and x is queue.pop())
   , true
+  N = 1e6
+  data = ({v: Math.random()} for i in [1..N])
+  compare = (a, b) => a.v - b.v
+  queue = new BinaryHeap()
+  console.time "Heapsort #{N}"
+  data.forEach (x) => queue.push x.v, x
+  res1 = (queue.pop() for i in [1..N])
+  console.timeEnd "Heapsort #{N}"
+  console.time "Array sort #{N}"
+  resA = data.sort compare
+  console.timeEnd "Array sort #{N}"
+  assert resA.every (item, i) => item is res1[i][1]
