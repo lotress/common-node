@@ -106,3 +106,40 @@ the result function should work the same as the original recursive function with
 @returns Tail call optimizied function.
 **/
 export function tco(f: GeneratorFunction): (...any) => any
+
+interface BinaryHeap<Key, Value> {
+  /**
+  Extract the minimal item of the heap, this item will be removed from the heap.
+  @returns The minimal key if the heap was constructed with simple = true, else the minimal [key, value].
+  **/
+  pop(): [Key, Value] | Key
+  /**
+  Peek the minimal item of the heap.
+  @returns The minimal key if the heap was constructed with simple = true, else the minimal [key, value].
+  **/
+  peek(): [Key, Value] | Key
+  /**
+  Push key and optional value into the heap.
+  @param key The key for comparing.
+  @param value The value mapped by the key.
+  @returns The heap itself.
+  **/
+  push(key: Key, value?: Value): BinaryHeap<Key, Value>
+}
+
+interface BinaryHeapOption {
+  Type?: Int8ArrayConstructor | Int16ArrayConstructor | Int32ArrayConstructor |
+    Uint8ArrayConstructor | Uint16ArrayConstructor | Uint32ArrayConstructor | Uint8ClampedArrayConstructor |
+    Float32ArrayConstructor | Float64ArrayConstructor
+  simple?: boolean
+}
+/**
+Construct a typed binary heap.
+@param option The constructor option: {@param Type A TypedArrayConstructor matched type of comparing keys,
+  @param simple True if only store keys, false if map key to a value}.
+**/
+interface BinaryHeapConstructor {
+  new(option?: BinaryHeapOption): BinaryHeap<Number, any>
+  (option?: BinaryHeapOption): BinaryHeap<Number, any>
+}
+export const BinaryHeap: BinaryHeapConstructor

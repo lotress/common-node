@@ -231,8 +231,26 @@ let count = tco(countG)
 console.log(count(1e7)) // 10000000
 ```
 ----
-After comparing the performance of several priority queue implementation,
+After comparing the performance of several priority queue implementations,
 we implemented a `BinaryHeap` using a typed key array.
+The keys used for comparing stored in a `TypedArray`, the type was assigned when constructing the heap.
+The heap will keep the item with minimal key on the top.
+The `BinaryHeap` can be constructed by a given option object, the default option is
+`{Type = Float64Array, simple = false}`.
+If simple is `true`, the heap will only store keys, otherwise every item can includes a corresponding value.
+
+```javascript
+let heap = BinaryHeap({Type: Uint8Array, simple: true})
+heap.push(2).push(1).push(4)
+console.log(heap.pop()) // 1
+console.log(heap.peek()) // 2
+let heap2 = BinaryHeap()
+heap2.push(0.1, 'more').push(-1, 'less').push(0, 'zero')
+console.log(heap2.pop()) // [-1, "less"]
+console.log(heap2.pop()) // [0, "zero"]
+console.log(heap2.pop()) // [0.1, "more"]
+console.log(heap2.pop()) // undefined
+```
 
 ### Node.js Library
 
