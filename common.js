@@ -368,11 +368,11 @@ genWrap = (Class) => {
   if (!(Class && Class.prototype && isFunction(Class))) {
     throw new TypeError('Argument is not a Class');
   }
-  return (obj) => {
+  return (obj, ...rest) => {
     if (obj instanceof Class) {
       return obj;
     } else {
-      return new Class(obj);
+      return new Class(obj, ...rest);
     }
   };
 };
