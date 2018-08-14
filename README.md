@@ -178,19 +178,19 @@ if `memory` is `true` then results will be returned in an Array, else returns `u
 
 ```javascript
 let number = function*() {
-  var n;
-  n = 1;
+  let n = 1
+  let k = 1
   while (true) {
-    yield n++;
+    k = yield n + k
   }
-};
+}
 
 let f = x => x < 5 ? x : void 0
 
 let g = x => delay(1000)()
   .then(_ => f(x))
 
-console.log(await sequence(g)(number())) // [1, 2, 3, 4] after 5s
+console.log(await sequence(g)(number())) // [2, 3, 4] after 4s
 ```
 ----
 `isGenerator` checks if the given object is a Generator.

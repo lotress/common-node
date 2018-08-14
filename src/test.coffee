@@ -156,8 +156,9 @@ Test('retry') ({assert}) =>
 Test('sequence') ({assert, assertSeq}) =>
   number = ->
     n = 1
+    k = 1
     while true
-      yield n++
+      k = yield n + k
     return
 
   f = (x) ->
@@ -174,7 +175,7 @@ Test('sequence') ({assert, assertSeq}) =>
   Promise.all [
     assertSeq 0
     a = await s
-    assert a.every (x, i) => x is i + 1
+    assert a.every (x, i) => x is i + 2
   ]
 
 Test('isGenerator') (report) =>

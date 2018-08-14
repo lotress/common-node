@@ -29,8 +29,8 @@ isSymmetry = (f) =>
 isIterable = (x) => isObject(x) and x[Symbol.iterator]
 getIterator = (x) => x[Symbol.iterator]()
 isMultiIterable = (x) => isIterable(x) and not isSymmetry(getIterator) x
-iter = (-> yield).prototype.constructor
-isGenerator = (g) => g and g.constructor is iter
+iterConstructor = (-> yield).prototype.constructor
+isGenerator = (g) => g and g.constructor is iterConstructor
 isGeneratorFunction = (g) => g and g[Symbol.toStringTag] is 'GeneratorFunction'
 
 mapList = (func) => (list) ->
@@ -133,16 +133,19 @@ firstElement = (iterable = []) => iterable[Symbol.iterator]().next().value
 sequence = (f, memory = true) =>
   if memory
     (iterable = []) =>
-      for i from iterable
-        res = await f i
+      iter = iterable[Symbol.iterator]()
+      while not (t = iter.next res).done
+        res = await f t.value
         if res?
           res
         else
           break
   else
     (iterable = []) =>
-      for i from iterable
-        if not (await f i)?
+      iter = iterable[Symbol.iterator]()
+      while not (t = iter.next res).done
+        res = await f t.value
+        if not res?
           break
       return
 
