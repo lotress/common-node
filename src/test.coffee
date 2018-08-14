@@ -13,6 +13,7 @@ _ = require './common'
   isGenerator,
   tco,
   BinaryHeap,
+  genWrap,
   genLog,
   logInfo,
   logError
@@ -237,3 +238,18 @@ Test('Priority Queue') ({assert}) =>
   resA = data.sort compare
   console.timeEnd "Array sort #{N}"
   assert resA.every (item, i) => item is res1[i][1]
+
+Test('Wrapper Generator') ({assert}) =>
+  f = (x) ->
+    @x = x.length
+    return
+  w = genWrap f
+  r = w 'aaa'
+  rr = w r
+  assert r.x is 3
+  assert r is rr
+  try
+    genWrap 'wrong'
+    assert false
+  catch e
+    assert e instanceof TypeError

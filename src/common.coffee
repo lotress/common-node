@@ -20,7 +20,7 @@ flatObject = (o) =>
 # Synchronous function only
 isSymmetry = (f) =>
   if not isFunction f
-    throw new TypeError 'Parameter is not a Function'
+    throw new TypeError 'Argument is not a Function'
   (...args) =>
     l = f ...args
     r = f ...args.reverse()
@@ -43,7 +43,7 @@ mapList = (func) => (list) ->
 
 tco = (f) =>
   if not isGeneratorFunction f
-    throw new TypeError 'Parameter is not a GeneratorFunction'
+    throw new TypeError 'Argument is not a GeneratorFunction'
   (...args) =>
     i = f ...args
     loop
@@ -148,12 +148,12 @@ sequence = (f, memory = true) =>
 
 pall = (fn) =>
   if not isFunction fn
-    throw new TypeError 'Parameter is not a Function'
+    throw new TypeError 'Argument is not a Function'
   (items = []) => allPromise mapArr(fn) items
 
 pushMap = (map) =>
   if not map instanceof Map
-    throw new TypeError 'Parameter is not a Map'
+    throw new TypeError 'Argument is not a Map'
   (item) => (key) =>
     c = map.get key
     c ?= []
@@ -172,7 +172,7 @@ deadline = (timeout) => =>
 
 retry = (f) =>
   if not isFunction f
-    throw new TypeError 'Parameter is not a Function'
+    throw new TypeError 'Argument is not a Function'
   noTry = new Error 'try count is 0'
   (count = 1) =>
     count = +count
@@ -186,6 +186,14 @@ retry = (f) =>
           .catch g
         else
           Promise.reject e
+
+genWrap = (Class) =>
+  if not (Class and Class.prototype and isFunction Class)
+    throw new TypeError 'Argument is not a Class'
+  (obj, ...rest) =>
+    if obj instanceof Class
+      obj
+    else new Class obj, ...rest
 
 MinCapacity = 128
 getCapacity = (length) =>
@@ -323,6 +331,7 @@ module.exports = {
   isGenerator,
   tco,
   BinaryHeap,
+  genWrap,
   logInfo,
   logError,
   genLog

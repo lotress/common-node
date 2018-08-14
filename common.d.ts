@@ -143,3 +143,5 @@ interface BinaryHeapConstructor {
   (option?: BinaryHeapOption): BinaryHeap<Number, any>
 }
 export const BinaryHeap: BinaryHeapConstructor
+
+export function genWrap(Class: ObjectConstructor): (obj: any, ...any) => Object

@@ -1,0 +1,16 @@
+.github
+.vscode
+.editorconfig
+.gitmodules
+coffeelint.json
+.eslintrc.js
+INSTALL.md
+CONTRIBUTING.md
+ISSUE_TEMPLATE.md
+PULL_REQUEST_TEMPLATE.md
+/doc
+/examples
+/test
+/build
+/node_modules
+.npmignore

@@ -28,6 +28,10 @@ import {
   retry,
   pushMap,
   sequence,
+  tco,
+  BinaryHeap,
+  genWrap,
+  genLog,
   logInfo,
   logError
 } from 'common-node'
@@ -250,6 +254,17 @@ console.log(heap2.pop()) // [-1, "less"]
 console.log(heap2.pop()) // [0, "zero"]
 console.log(heap2.pop()) // [0.1, "more"]
 console.log(heap2.pop()) // undefined
+```
+----
+`genWrap` takes a Class then returns a factory function of this class.
+
+```javascript
+let w = genWrap(Error)
+// all arguments will be passed to the constructor if the first argument is not instance of the class
+let e = w('my error')
+let ee = w(e)
+console.log(e === ee) // true
+console.log(ee.message) // my error
 ```
 
 ### Node.js Library
