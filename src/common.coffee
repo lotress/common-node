@@ -166,7 +166,7 @@ pushMap = (map) =>
 # Let setTimeout converts timeout parameter, no check here
 delay = (timeout) => (result) =>
   new Promise (resolve) =>
-    setTimeout (=> resolve if arg is undefined then timeout else result)
+    setTimeout (=> resolve if result is undefined then timeout else result)
     , timeout
 
 deadline = (timeout) => (reason) =>
@@ -308,7 +308,7 @@ genLog = do (logLevel) => (level) => (func) =>
   else
     None
 
-newMessageQueue = (lengthBits, items, c, l, length, mod) ->
+newMessageQueue = (lengthBits, items, c, l, length, mod) =>
   l = 0
   (l++ if c) for c in items
   c = items?.length
@@ -318,14 +318,14 @@ newMessageQueue = (lengthBits, items, c, l, length, mod) ->
   items ?= []
   items.length = length
 
-  [ ->
+  [ =>
     if l >= length
       throw new Error 'Full'
     (c = (c + 1) | 0)  while items[c & mod]
     l += 1
     items[c & mod] = { id: c }
 
-  (id) ->
+  (id) =>
     p = id & mod
     res = items[p]
     l -= 1 if res
@@ -333,10 +333,10 @@ newMessageQueue = (lengthBits, items, c, l, length, mod) ->
     res
   ]
 
-newPool = (pool, queue, r, newP) ->
+newPool = (pool, queue, r, newP) =>
   queue = pool.slice()
   r = null
-  newP = -> new Promise (resolve) -> r = resolve
+  newP = => new Promise (resolve) => r = resolve
   [ ->
     while true
       while queue.length
@@ -344,7 +344,7 @@ newPool = (pool, queue, r, newP) ->
       await do newP
     return
 
-  (w) ->
+  (w) =>
     queue.push w
     r?()
     r = null]

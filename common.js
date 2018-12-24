@@ -322,7 +322,7 @@ delay = (timeout) => {
   return (result) => {
     return new Promise((resolve) => {
       return setTimeout((() => {
-        return resolve(arg === void 0 ? timeout : result);
+        return resolve(result === void 0 ? timeout : result);
       }), timeout);
     });
   };
@@ -516,7 +516,7 @@ genLog = ((logLevel) => {
   };
 })(logLevel);
 
-newMessageQueue = function(lengthBits, items, c, l, length, mod) {
+newMessageQueue = (lengthBits, items, c, l, length, mod) => {
   var len, m;
   l = 0;
   for (m = 0, len = items.length; m < len; m++) {
@@ -534,7 +534,7 @@ newMessageQueue = function(lengthBits, items, c, l, length, mod) {
   }
   items.length = length;
   return [
-    function() {
+    () => {
       if (l >= length) {
         throw new Error('Full');
       }
@@ -546,7 +546,7 @@ newMessageQueue = function(lengthBits, items, c, l, length, mod) {
         id: c
       };
     },
-    function(id) {
+    (id) => {
       var p,
     res;
       p = id & mod;
@@ -560,11 +560,11 @@ newMessageQueue = function(lengthBits, items, c, l, length, mod) {
   ];
 };
 
-newPool = function(pool, queue, r, newP) {
+newPool = (pool, queue, r, newP) => {
   queue = pool.slice();
   r = null;
-  newP = function() {
-    return new Promise(function(resolve) {
+  newP = () => {
+    return new Promise((resolve) => {
       return r = resolve;
     });
   };
@@ -577,7 +577,7 @@ newPool = function(pool, queue, r, newP) {
         await newP();
       }
     },
-    function(w) {
+    (w) => {
       queue.push(w);
       if (typeof r === "function") {
         r();
