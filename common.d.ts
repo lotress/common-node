@@ -145,3 +145,33 @@ interface BinaryHeapConstructor {
 export const BinaryHeap: BinaryHeapConstructor
 
 export function genWrap(Class: ObjectConstructor): (obj: any, ...any) => Object
+
+interface MessageItem {
+  id: number
+}
+
+/**
+Get a new message item.
+@returns A new message item with id set, or throws Error if queue is full.
+**/
+type newItemFunction = () => MessageItem
+/**
+Get message item with given id and remove it from the queue.
+@returns The message item with given id, or undefined if not found.
+**/
+type popItemFunction = (id: number) => void | MessageItem
+
+/**
+Construct a new message queue.
+@param lengthBits Set the length of queue to 2^lengthBits.
+@param items Initial array of items, operates inplace.
+@returns Function array [newItem, popItem].
+**/
+export function newMessageQueue(lengthBits: number, items?: any[]): [newItemFunction, popItemFunction]
+
+/**
+Construct a new pool.
+@param pool Items for the pool.
+@returns Function array [acquire, release].
+**/
+export function newPool<T>(pool: T[]): [() => Promise<Iterator<T>>, (itme: T) => void]

@@ -16,7 +16,9 @@ _ = require './common'
   genWrap,
   genLog,
   logInfo,
-  logError
+  logError,
+  newMessageQueue,
+  newPool
 } = _
 
 logInfo = genLog 2
@@ -254,3 +256,51 @@ Test('Wrapper Generator') ({assert}) =>
     assert false
   catch e
     assert e instanceof TypeError
+
+Test('Message Queue') ({assert}) =>
+  items = []
+  [newItem, popItem] = newMessageQueue 2, items
+  newItem() for i in [1..4]
+  id = items[2].id
+  item = popItem 2
+  assert item.id is id
+  item = newItem()
+  assert (item.id & 3) is 2
+  try
+    newItem()
+    assert false
+  catch e
+    assert e.message is 'Full'
+
+Test('Pool') ({assert}) =>
+  pool = [1, 2, 3]
+  s = new Set()
+  [acquire, release] = newPool pool
+  a = acquire()
+  c = 0
+  timeout = 20
+  times = 99
+  f = =>
+    if c > times
+      return
+    c += 1
+    w = await do a.next
+    v = w.value
+    assert not s.has v
+    s.add v
+    new Promise (resolve) =>
+      setTimeout resolve, timeout
+    .then ->
+      assert s.has v
+      s.delete v
+      release v
+      f()
+  new Promise (resolve) =>
+    setTimeout resolve, 1000
+  .then =>
+    start = Date.now()
+    Promise.all [f(), f(), f()]
+    .then => start
+  .then (start) ->
+    elapse = Date.now() - start
+    assert elapse * 3 >= timeout * times > elapse * 2

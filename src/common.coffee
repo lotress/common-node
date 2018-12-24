@@ -307,6 +307,47 @@ genLog = do (logLevel) => (level) => (func) =>
   else
     None
 
+newMessageQueue = (lengthBits, items, c, l, length, mod) ->
+  l = 0
+  (l++ if c) for c in items
+  c = items?.length
+  c ?= 0
+  length = 1 << lengthBits
+  mod = length - 1
+  items ?= []
+  items.length = length
+
+  [ ->
+    if l >= length
+      throw new Error 'Full'
+    (c = (c + 1) | 0)  while items[c & mod]
+    l += 1
+    items[c & mod] = { id: c }
+
+  (id) ->
+    p = id & mod
+    res = items[p]
+    l -= 1 if res
+    items[p] = undefined
+    res
+  ]
+
+newPool = (pool, queue, r, newP) ->
+  queue = pool.slice()
+  r = null
+  newP = -> new Promise (resolve) -> r = resolve
+  [ ->
+    while true
+      while queue.length
+        yield queue.pop()
+      await do newP
+    return
+
+  (w) ->
+    queue.push w
+    r?()
+    r = null]
+
 ###eslint no-console: 0###
 logInfo = genLog(1) bindObject console, 'log'
 
@@ -335,6 +376,8 @@ module.exports = {
   tco,
   BinaryHeap,
   genWrap,
+  newMessageQueue,
+  newPool,
   logInfo,
   logError,
   genLog
