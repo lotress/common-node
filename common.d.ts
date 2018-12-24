@@ -50,16 +50,16 @@ export function M<T, E = never>(f: ((...any) => T | E) | PromiseLike<T | E> | T)
 /**
   Returns a function when called, it resolves with timeout after timeout milliseconds passed
   @param timeout Time out in millisecond.
-  @returns Function without parameters, returning a Promise.
+  @returns Function with a optional result, returning a Promise resolves with the result or the timeout.
 **/
-export function delay(timeout: number): () => Promise<number>
+export function delay<T>(timeout: number): (result?: T) => Promise<T | number>
 
 /**
   Returns a function when called, it rejects with timeout after timeout milliseconds passed
   @param timeout Time out in millisecond.
-  @returns Function without parameters, returning a Promise.
+  @returns Function with a optional reason, returning a Promise rejects with the reason or the timeout Error.
 **/
-export function deadline(timeout: number): () => Promise<number>
+export function deadline<T>(timeout: number): (reason?: T) => Promise<T | Error>
 
 export function allAwait(funcs: ((...any) => any)[]): (args: any[][]) => Promise<ReturnType<any>[]>
 

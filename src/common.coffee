@@ -164,12 +164,13 @@ pushMap = (map) =>
     map.set key, c
 
 # Let setTimeout converts timeout parameter, no check here
-delay = (timeout) => =>
+delay = (timeout) => (result) =>
   new Promise (resolve) =>
-    setTimeout (=> resolve(timeout)), timeout
+    setTimeout (=> resolve if arg is undefined then timeout else result)
+    , timeout
 
-deadline = (timeout) => =>
-  reason = new Error timeout
+deadline = (timeout) => (reason) =>
+  reason ?= new Error timeout
   new Promise (resolve, reject) =>
     setTimeout (=> reject reason), timeout
 

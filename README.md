@@ -95,9 +95,9 @@ f('world')
 ----
 `delay` and `deadline` are functions return a Promise resolve/reject after given timeout.
 
-`delay: (time: number) -> () -> Promise(-> time)`
+`delay: (time: number) -> (result?: any) -> Promise(-> result | time)`
 
-`deadline: (time: number) -> () -> Promise(-> time)`
+`deadline: (time: number) -> (reason?: any) -> Promise(-> reason | Error(time))`
 
 `allAwait` and `raceAwait` are lazy modification of Promise.all and Promise.race.
 

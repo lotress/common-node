@@ -319,19 +319,20 @@ pushMap = (map) => {
 
 // Let setTimeout converts timeout parameter, no check here
 delay = (timeout) => {
-  return () => {
+  return (result) => {
     return new Promise((resolve) => {
       return setTimeout((() => {
-        return resolve(timeout);
+        return resolve(arg === void 0 ? timeout : result);
       }), timeout);
     });
   };
 };
 
 deadline = (timeout) => {
-  return () => {
-    var reason;
-    reason = new Error(timeout);
+  return (reason) => {
+    if (reason == null) {
+      reason = new Error(timeout);
+    }
     return new Promise((resolve, reject) => {
       return setTimeout((() => {
         return reject(reason);
