@@ -293,19 +293,19 @@ try {
 }
 ```
 ----
-`newPool` constructs a new pool.
+`newPool` constructs a new pool, it has a optional timeout argument.
 
 ```javascript
-var acquire, release, c = 0
-const pool = [1, 2, 3]
-[acquire, release] = newPool(pool)
-const a = acquire(), timeout = 20, times = 99, s = new Set()
+var ac, release, c = 0
+const pool = [1, 2, 3], timeout = 20, times = 99, s = new Set()
+[ac, release] = newPool(pool, timeout / 2)
+
+const acquire = (g => async() => (await g()).value)((o => o.next.bind(o))(ac()))
 
 const f = async() => {
   if (c > times) return
   c += 1
-  let w = await a.next()
-  let v = w.value
+  let v = await acquire()
   console.log(s.has(v)) // false
   s.add(v)
   return new Promise(resolve => setTimeout(resolve, timeout))
@@ -321,6 +321,20 @@ const start = Date.now()
 Promise.all([f(), f(), f()])
 .then(start => console.log(Date.now() - start))
 // should between [timeout * times / 3, timeout * times / 2]
+.then => {
+  const g = async() => {
+    let v = await acquire()
+    if (v instanceof Error) {
+      console.error 'Acquire timed out' // should print once
+      return
+    }
+    console.log(v) // 3 2 1
+    await delay(timeout)()
+    return release(v)
+  }
+
+  Promise.all([g(), g(), g(), g()])
+}
 ```
 
 ### Node.js Library

@@ -560,21 +560,35 @@ newMessageQueue = (lengthBits, items, c, l, length, mod) => {
   ];
 };
 
-newPool = (pool, queue, r, newP) => {
+newPool = (pool, timeout, queue, r, newP) => {
   queue = pool.slice();
   r = null;
-  newP = () => {
+  newP = timeout != null ? () => {
+    return new Promise((resolve, reject) => {
+      r = resolve;
+      return setTimeout((() => {
+        return reject(timeout);
+      }), timeout);
+    });
+  } : () => {
     return new Promise((resolve) => {
       return r = resolve;
     });
   };
   return [
     async function*() {
+      var res;
       while (true) {
         while (queue.length) {
           yield queue.pop();
         }
-        await newP();
+        res = (await newP().catch((e) => {
+          return new Error(e);
+        }));
+        if (res instanceof Error) {
+          r = null;
+          yield res;
+        }
       }
     },
     (w) => {

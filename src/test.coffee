@@ -275,8 +275,8 @@ Test('Message Queue') ({assert}) =>
 Test('Pool') ({assert}) =>
   pool = [1, 2, 3]
   s = new Set()
-  [acquire, release] = newPool pool
-  a = acquire()
+  [ac, release] = newPool pool
+  acquire = do (g = do (o = ac()) => o.next.bind o) => => (await g()).value
   c = 0
   timeout = 20
   times = 99
@@ -284,8 +284,7 @@ Test('Pool') ({assert}) =>
     if c > times
       return
     c += 1
-    w = await do a.next
-    v = w.value
+    v = await acquire()
     assert not s.has v
     s.add v
     new Promise (resolve) =>
@@ -304,3 +303,24 @@ Test('Pool') ({assert}) =>
   .then (start) ->
     elapse = Date.now() - start
     assert elapse * 3 >= timeout * times > elapse * 2
+
+Test('Pool with timeout') ({assert}) =>
+  pool = [1, 2, 3]
+  s = new Set pool
+  [ac, release] = newPool pool, 10
+  acquire = do (g = do (o = ac()) => o.next.bind o) => => (await g()).value
+  c = 0
+  f = =>
+    res = await acquire()
+    if res instanceof Error
+      c = 1
+      assert +res.message is 10
+      return
+    await delay(20)()
+    assert s.has res
+    s.delete res
+    release res
+  Promise.all (f() for _ in [1..4])
+  .then =>
+    assert s.size is 0
+    assert c is 1

@@ -333,15 +333,24 @@ newMessageQueue = (lengthBits, items, c, l, length, mod) =>
     res
   ]
 
-newPool = (pool, queue, r, newP) =>
+newPool = (pool, timeout, queue, r, newP) =>
   queue = pool.slice()
   r = null
-  newP = => new Promise (resolve) => r = resolve
+  newP = if timeout?
+    => new Promise (resolve, reject) =>
+      r = resolve
+      setTimeout (=> reject timeout), timeout
+  else => new Promise (resolve) => r = resolve
   [ ->
     while true
       while queue.length
         yield queue.pop()
-      await do newP
+      res = await newP()
+      .catch (e) =>
+        new Error e
+      if res instanceof Error
+        r = null
+        yield res
     return
 
   (w) =>

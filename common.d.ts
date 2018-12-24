@@ -172,6 +172,7 @@ export function newMessageQueue(lengthBits: number, items?: any[]): [newItemFunc
 /**
 Construct a new pool.
 @param pool Items for the pool.
+@param timeout Optional timeout for acquire, (await acquire().next()).value will be an Error if timed out.
 @returns Function array [acquire, release].
 **/
-export function newPool<T>(pool: T[]): [() => Promise<Iterator<T>>, (itme: T) => void]
+export function newPool<T>(pool: T[], timeout?: number): [() => Promise<Iterator<T | Error>>, (itme: T) => void]
