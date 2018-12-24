@@ -33,7 +33,9 @@ import {
   genWrap,
   genLog,
   logInfo,
-  logError
+  logError,
+  newMessageQueue,
+  newPool
 } from 'common-node'
 ```
 
@@ -265,6 +267,60 @@ let e = w('my error')
 let ee = w(e)
 console.log(e === ee) // true
 console.log(ee.message) // my error
+```
+----
+`newMessageQueue` constructs a new message queue
+
+```javascript
+const items = []
+var newItem, popItem
+[newItem, popItem] = newMessageQueue 2, items
+
+for (let i = 4; i--;) newItem()
+let id = items[2].id
+let item = popItem 2
+
+console.log(item.id === id) // true
+
+item = newItem()
+
+console.log(item.id & 3) // 2
+
+try {
+  newItem()
+} catch(e) {
+  console.error(e.message) // Full
+}
+```
+----
+`newPool` constructs a new pool.
+
+```javascript
+var acquire, release, c = 0
+const pool = [1, 2, 3]
+[acquire, release] = newPool(pool)
+const a = acquire(), timeout = 20, times = 99, s = new Set()
+
+const f = async() => {
+  if (c > times) return
+  c += 1
+  let w = await a.next()
+  let v = w.value
+  console.log(s.has(v)) // false
+  s.add(v)
+  return new Promise(resolve => setTimeout(resolve, timeout))
+  .then(() => {
+    console.log(s.has(v)) // true
+    s.delete(v)
+    release(v)
+    return f()
+  })
+}
+
+const start = Date.now()
+Promise.all([f(), f(), f()])
+.then(start => console.log(Date.now() - start))
+// should between [timeout * times / 3, timeout * times / 2]
 ```
 
 ### Node.js Library
