@@ -313,13 +313,14 @@ Test('Pool') ({assert}) =>
 Test('Pool with timeout') ({assert}) =>
   pool = [1, 2, 3]
   s = new Set pool
-  [ac, release] = newPool pool, 10
+  [ac, release] = newPool pool, 10, true
   acquire = do (g = do (o = ac()) => o.next.bind o) => => (await g()).value
   c = 0
   f = =>
     res = await acquire()
     if res instanceof Error
       c = 1
+      assert pool.length is 0
       assert +res.message is 10
       return
     await delay(20)()

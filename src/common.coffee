@@ -337,8 +337,8 @@ newMessageQueue = (lengthBits, items, c, l, length, mod) =>
     items[p]
   ]
 
-newPool = (pool, timeout, queue, r, newP) =>
-  queue = pool.slice()
+newPool = (pool, timeout, inplace = false, queue, r, newP) =>
+  queue = if inplace then pool else pool.slice()
   r = null
   newP = if timeout?
     => new Promise (resolve, reject) =>

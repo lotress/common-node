@@ -152,7 +152,8 @@ interface MessageItem {
 
 /**
 Get a new message item.
-@returns A new message item with id set, or throws Error if queue is full.
+@returns A new message item with id set.
+@throws Error if queue is full
 **/
 type newItemFunction = () => MessageItem
 /**
@@ -171,8 +172,9 @@ export function newMessageQueue(lengthBits: number, items?: any[]): [newItemFunc
 
 /**
 Construct a new pool.
-@param pool Items for the pool.
+@param pool Array of items for the pool.
 @param timeout Optional timeout for acquire, (await acquire().next()).value will be an Error if timed out.
+@param inplace Use the given pool inplace if set to true, default is false.
 @returns Function array [acquire, release].
 **/
-export function newPool<T>(pool: T[], timeout?: number): [() => Iterator<Promise<T | Error>>, (itme: T) => void]
+export function newPool<T>(pool: T[], timeout?: number, inplace?: boolean): [() => Iterator<Promise<T | Error>>, (itme: T) => void]

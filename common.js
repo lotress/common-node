@@ -565,8 +565,8 @@ newMessageQueue = (lengthBits, items, c, l, length, mod) => {
   ];
 };
 
-newPool = (pool, timeout, queue, r, newP) => {
-  queue = pool.slice();
+newPool = (pool, timeout, inplace = false, queue, r, newP) => {
+  queue = inplace ? pool : pool.slice();
   r = null;
   newP = timeout != null ? () => {
     return new Promise((resolve, reject) => {
