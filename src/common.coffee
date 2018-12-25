@@ -311,7 +311,7 @@ genLog = do (logLevel) => (level) => (func) =>
 newMessageQueue = (lengthBits, items, c, l, length, mod) =>
   l = 0
   (l++ if c) for c in items
-  c = items?.length
+  c = items?.length - 1
   c ?= 0
   length = 1 << lengthBits
   mod = length - 1

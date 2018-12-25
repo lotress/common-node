@@ -523,7 +523,7 @@ newMessageQueue = (lengthBits, items, c, l, length, mod) => {
     c = items[m];
     (c ? l++ : void 0);
   }
-  c = items != null ? items.length : void 0;
+  c = (items != null ? items.length : void 0) - 1;
   if (c == null) {
     c = 0;
   }
