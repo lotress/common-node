@@ -63,7 +63,7 @@ export function deadline<T>(timeout: number): (reason?: T) => Promise<T | Error>
 
 export function allAwait(funcs: ((...any) => any)[]): (args: any[][]) => Promise<ReturnType<any>[]>
 
-export function raceAwait(funcs: ((...any) => any)[]): (args: any[][]) => Promise<ReturnType<any>[]>
+export function raceAwait(funcs: ((...any) => any)[]): (args: any[][]) => Promise<ReturnType<any>>
 
 /**
   Decorate a function which possibily throws with a retry count,

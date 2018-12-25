@@ -103,7 +103,7 @@ f('world')
 
 `allAwait: (funcs: Array[input: *any -> output: any]) -> (args: Array[input]) -> Promise(-> Array[output])`
 
-`raceAwait: (funcs: Array[input: *any -> output: any]) -> (args: Array[input]) -> Promise(-> Array[output])`
+`raceAwait: (funcs: Array[input: *any -> output: any]) -> (args: Array[input]) -> Promise(-> output)`
 
 args are passed to funcs with same index
 
