@@ -517,7 +517,7 @@ genLog = ((logLevel) => {
 })(logLevel);
 
 newMessageQueue = (lengthBits, items, c, l, length, mod) => {
-  var len, m;
+  var len, m, next;
   l = 0;
   for (m = 0, len = items.length; m < len; m++) {
     c = items[m];
@@ -533,13 +533,17 @@ newMessageQueue = (lengthBits, items, c, l, length, mod) => {
     items = [];
   }
   items.length = length;
+  next = () => {
+    return c = (c + 1) | 0;
+  };
   return [
     () => {
       if (l >= length) {
         throw new Error('Full');
       }
+      next();
       while (items[c & mod]) {
-        (c = (c + 1) | 0);
+        next();
       }
       l += 1;
       return items[c & mod] = {

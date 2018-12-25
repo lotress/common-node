@@ -272,6 +272,7 @@ Test('Message Queue') ({assert}) =>
   assert item is undefined
   item = newItem()
   assert (item.id & 3) is 2
+  assert item.id > 2
   try
     newItem()
     assert false

@@ -317,11 +317,13 @@ newMessageQueue = (lengthBits, items, c, l, length, mod) =>
   mod = length - 1
   items ?= []
   items.length = length
+  next = => c = (c + 1) | 0
 
   [ =>
     if l >= length
       throw new Error 'Full'
-    (c = (c + 1) | 0)  while items[c & mod]
+    next()
+    next()  while items[c & mod]
     l += 1
     items[c & mod] = { id: c }
 
