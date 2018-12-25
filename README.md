@@ -274,13 +274,16 @@ console.log(ee.message) // my error
 ```javascript
 const items = []
 var newItem, popItem
-[newItem, popItem] = newMessageQueue 2, items
+[newItem, popItem, peek] = newMessageQueue 2, items
 
 for (let i = 4; i--;) newItem()
 let id = items[2].id
-let item = popItem 2
+let p = peek id
+let item = popItem(id)
 
 console.log(item.id === id) // true
+console.log(p.id === id) // true
+console.log(popItem(id) === void 0) // true
 
 item = newItem()
 

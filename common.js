@@ -556,6 +556,11 @@ newMessageQueue = (lengthBits, items, c, l, length, mod) => {
       }
       items[p] = void 0;
       return res;
+    },
+    (id) => {
+      var p;
+      p = id & mod;
+      return items[p];
     }
   ];
 };

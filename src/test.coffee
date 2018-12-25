@@ -259,11 +259,17 @@ Test('Wrapper Generator') ({assert}) =>
 
 Test('Message Queue') ({assert}) =>
   items = []
-  [newItem, popItem] = newMessageQueue 2, items
+  [newItem, popItem, peek] = newMessageQueue 2, items
   newItem() for i in [1..4]
   id = items[2].id
-  item = popItem 2
+  t = peek id
+  assert items[2] is t
+  item = popItem id
   assert item.id is id
+  assert t.id is id
+  assert items[2] is undefined
+  item = popItem id
+  assert item is undefined
   item = newItem()
   assert (item.id & 3) is 2
   try

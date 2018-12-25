@@ -331,6 +331,10 @@ newMessageQueue = (lengthBits, items, c, l, length, mod) =>
     l -= 1 if res
     items[p] = undefined
     res
+
+  (id) =>
+    p = id & mod
+    items[p]
   ]
 
 newPool = (pool, timeout, queue, r, newP) =>
