@@ -159,15 +159,15 @@ type newItemFunction = () => MessageItem
 Get message item with given id and remove it from the queue.
 @returns The message item with given id, or undefined if not found.
 **/
-type popItemFunction = (id: number) => void | MessageItem
+type getItemFunction = (id: number) => void | MessageItem
 
 /**
 Construct a new message queue.
 @param lengthBits Set the length of queue to 2^lengthBits.
 @param items Initial array of items, operates inplace.
-@returns Function array [newItem, popItem].
+@returns Function array [newItem, popItem, peek].
 **/
-export function newMessageQueue(lengthBits: number, items?: any[]): [newItemFunction, popItemFunction]
+export function newMessageQueue(lengthBits: number, items?: any[]): [newItemFunction, getItemFunction, getItemFunction]
 
 /**
 Construct a new pool.
@@ -175,4 +175,4 @@ Construct a new pool.
 @param timeout Optional timeout for acquire, (await acquire().next()).value will be an Error if timed out.
 @returns Function array [acquire, release].
 **/
-export function newPool<T>(pool: T[], timeout?: number): [() => Promise<Iterator<T | Error>>, (itme: T) => void]
+export function newPool<T>(pool: T[], timeout?: number): [() => Iterator<Promise<T | Error>>, (itme: T) => void]
