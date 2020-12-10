@@ -146,6 +146,19 @@ export const BinaryHeap: BinaryHeapConstructor
 
 export function genWrap(Class: ObjectConstructor): (obj: any, ...any) => Object
 
+interface EventEmitter {
+  on(eventName: string, handler: Function)
+}
+
+/**
+Wrap an event emitter into a promise that resolves or rejects on specified event name.
+@param event An event name to resolve.
+@param eventReject An event name to reject.
+@param emitter An event emitter object.
+@returns A promise passes the emitter and event arguments to handler.
+**/
+export function eventPromise(event: string, eventReject?: string): (emitter: EventEmitter) => Promise<EventEmitter>
+
 interface MessageItem {
   id: number
 }
@@ -155,7 +168,7 @@ Get a new message item.
 @returns A new message item with id set.
 @throws Error if queue is full
 **/
-type newItemFunction = () => MessageItem
+type newItemFunction = (message?: any) => MessageItem
 /**
 Get message item with given id and remove it from the queue.
 @returns The message item with given id, or undefined if not found.
@@ -166,9 +179,9 @@ type getItemFunction = (id: number) => void | MessageItem
 Construct a new message queue.
 @param lengthBits Set the length of queue to 2^lengthBits.
 @param items Initial array of items, operates inplace.
-@returns Function array [newItem, popItem, peek].
+@returns Function array [newItem, popItem, peek, length].
 **/
-export function newMessageQueue(lengthBits: number, items?: any[]): [newItemFunction, getItemFunction, getItemFunction]
+export function newMessageArray(lengthBits: number, items?: any[]): [newItemFunction, getItemFunction, getItemFunction, () => number]
 
 /**
 Construct a new pool.

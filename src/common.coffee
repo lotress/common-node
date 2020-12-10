@@ -199,6 +199,14 @@ genWrap = (Class) =>
       obj
     else new Class obj, ...rest
 
+eventPromise = (event, eventReject = null) => (emitter) =>
+  new Promise((resolve, reject) =>
+    if not emitter then return resolve()
+    if eventReject
+      emitter.on(eventReject, (...args) => reject(emitter, ...args))
+    emitter.on(event, (...args) => resolve(emitter, ...args))
+  )
+
 MinCapacity = 128
 getCapacity = (length) =>
   if length < MinCapacity then MinCapacity else 1 << 32 - Math.clz32 length
@@ -308,7 +316,7 @@ genLog = do (logLevel) => (level) => (func) =>
   else
     None
 
-newMessageQueue = (lengthBits, items, c, l, length, mod) =>
+newMessageArray = (lengthBits, items, c, l, length, mod) =>
   l = 0
   (l++ if c) for c in items
   c = items?.length - 1
@@ -319,13 +327,13 @@ newMessageQueue = (lengthBits, items, c, l, length, mod) =>
   items.length = length
   next = => c = (c + 1) | 0
 
-  [ =>
+  [(message) =>
     if l >= length
       throw new Error 'Full'
     next()
     next()  while items[c & mod]
     l += 1
-    items[c & mod] = { id: c }
+    items[c & mod] = { id: c, message }
 
   (id) =>
     p = id & mod
@@ -337,6 +345,8 @@ newMessageQueue = (lengthBits, items, c, l, length, mod) =>
   (id) =>
     p = id & mod
     items[p]
+
+  => l
   ]
 
 newPool = (pool, timeout, inplace = false, queue, r, newP) =>
@@ -392,7 +402,8 @@ module.exports = {
   tco,
   BinaryHeap,
   genWrap,
-  newMessageQueue,
+  eventPromise,
+  newMessageArray,
   newPool,
   logInfo,
   logError,

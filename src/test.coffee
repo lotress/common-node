@@ -17,7 +17,7 @@ _ = require './common'
   genLog,
   logInfo,
   logError,
-  newMessageQueue,
+  newMessageArray,
   newPool
 } = _
 
@@ -257,9 +257,9 @@ Test('Wrapper Generator') ({assert}) =>
   catch e
     assert e instanceof TypeError
 
-Test('Message Queue') ({assert}) =>
+Test('Message Array') ({assert}) =>
   items = []
-  [newItem, popItem, peek] = newMessageQueue 2, items
+  [newItem, popItem, peek] = newMessageArray 2, items
   newItem() for i in [1..4]
   id = items[2].id
   t = peek id
@@ -279,13 +279,14 @@ Test('Message Queue') ({assert}) =>
   catch e
     assert e.message is 'Full'
 
-Test('Pool') ({assert}) =>
+Test('Pool') ({assert, idle}) =>
   pool = [1, 2, 3]
   s = new Set()
   [ac, release] = newPool pool
   acquire = do (g = do (o = ac()) => o.next.bind o) => => (await g()).value
   c = 0
   timeout = 20
+  d = delay(timeout)
   times = 99
   f = =>
     if c > times
@@ -294,21 +295,17 @@ Test('Pool') ({assert}) =>
     v = await acquire()
     assert not s.has v
     s.add v
-    new Promise (resolve) =>
-      setTimeout resolve, timeout
+    d()
     .then ->
       assert s.has v
       s.delete v
       release v
       f()
-  new Promise (resolve) =>
-    setTimeout resolve, 1000
-  .then =>
-    start = Date.now()
-    Promise.all [f(), f(), f()]
-    .then => start
-  .then (start) ->
-    elapse = Date.now() - start
+  await idle()
+  start = Date.now()
+  Promise.all [f(), f(), f()]
+  .then => Date.now() - start
+  .then (elapse) =>
     assert elapse * 3 >= timeout * times > elapse * 2
 
 Test('Pool with timeout') ({assert}) =>

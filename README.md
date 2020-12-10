@@ -225,9 +225,9 @@ try {
 #### The optimized style
 
 ```javascript
-const countG = function*(n, res) {
+const countG = function*(n, res = 0) {
   if (n < 1)
-    yield n
+    yield res
   else
     yield countG(n - 1, res + 1)
 }
@@ -242,7 +242,7 @@ we implemented a `BinaryHeap` using a typed key array.
 The keys used for comparing stored in a `TypedArray`, the type was assigned when constructing the heap.
 The heap will keep the item with minimal key on the top.
 The `BinaryHeap` can be constructed by a given option object, the default option is
-`{Type = Float64Array, simple = false}`.
+`{Type: Float64Array, simple: false}`.
 If simple is `true`, the heap will only store keys, otherwise every item can includes a corresponding value.
 
 ```javascript
@@ -269,29 +269,31 @@ console.log(e === ee) // true
 console.log(ee.message) // my error
 ```
 ----
-`newMessageQueue` constructs a new message queue
+`newMessageArray` constructs a new message array
 
 ```javascript
 const items = []
-var newItem, popItem
-[newItem, popItem, peek] = newMessageQueue 2, items
+var newItem, popItem, peek, getLength
+;[newItem, popItem, peek, getLength] = newMessageArray(2, items)
 
-for (let i = 4; i--;) newItem()
+for (let i = 4; i--; ) newItem()
 let id = items[2].id
-let p = peek id
+let p = peek(id)
+console.log(getLength()) // 4
 let item = popItem(id)
 
 console.log(item.id === id) // true
 console.log(p.id === id) // true
-console.log(popItem(id) === void 0) // true
+console.log(getLength()) // 3
 
-item = newItem()
+item = newItem('hello')
 
 console.log(item.id & 3) // 2
+console.log(item.message) // hello
 
 try {
   newItem()
-} catch(e) {
+} catch (e) {
   console.error(e.message) // Full
 }
 ```
