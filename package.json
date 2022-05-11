@@ -1,6 +1,6 @@
 {
   "name": "common-node",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "A routine library simplifies functional asynchronous javascript",
   "main": "common.js",
   "devDependencies": {

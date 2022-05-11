@@ -1,7 +1,7 @@
 {
   "version": 3,
   "file": "testFramework.js",
-  "sourceRoot": "",
+  "sourceRoot": "\\",
   "sources": [
     "src\\testFramework.coffee"
   ],

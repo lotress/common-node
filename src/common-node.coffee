@@ -1,8 +1,8 @@
 getFullPath = (directory) =>
   path = require 'path'
-  p = path.join process.cwd(), directory
+  p = path.resolve process.cwd(), directory
   (name) =>
-    path.join p, name
+    path.resolve p, name
 
 module.exports = {
   getFullPath

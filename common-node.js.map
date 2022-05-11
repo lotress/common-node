@@ -1,13 +1,13 @@
 {
   "version": 3,
   "file": "common-node.js",
-  "sourceRoot": "",
+  "sourceRoot": "\\",
   "sources": [
     "src\\common-node.coffee"
   ],
   "names": [],
-  "mappings": ";AAAA,IAAA;;AAAA,WAAA,GAAc,CAAC,SAAD,CAAA,GAAA;AACd,MAAA,CAAA,EAAA;EAAE,IAAA,GAAO,OAAA,CAAQ,MAAR;EACP,CAAA,GAAI,IAAI,CAAC,IAAL,CAAU,OAAO,CAAC,GAAR,CAAA,CAAV,EAAyB,SAAzB;SACJ,CAAC,IAAD,CAAA,GAAA;WACE,IAAI,CAAC,IAAL,CAAU,CAAV,EAAa,IAAb;EADF;AAHY;;AAMd,MAAM,CAAC,OAAP,GAAiB,CACf,WADe",
+  "mappings": ";AAAA,IAAA;;AAAA,WAAA,GAAc,CAAC,SAAD,CAAA,GAAA;AACd,MAAA,CAAA,EAAA;EAAE,IAAA,GAAO,OAAA,CAAQ,MAAR;EACP,CAAA,GAAI,IAAI,CAAC,OAAL,CAAa,OAAO,CAAC,GAAR,CAAA,CAAb,EAA4B,SAA5B;SACJ,CAAC,IAAD,CAAA,GAAA;WACE,IAAI,CAAC,OAAL,CAAa,CAAb,EAAgB,IAAhB;EADF;AAHY;;AAMd,MAAM,CAAC,OAAP,GAAiB,CACf,WADe",
   "sourcesContent": [
-    "getFullPath = (directory) =>\r\n  path = require 'path'\r\n  p = path.join process.cwd(), directory\r\n  (name) =>\r\n    path.join p, name\r\n\r\nmodule.exports = {\r\n  getFullPath\r\n}\r\n"
+    "getFullPath = (directory) =>\r\n  path = require 'path'\r\n  p = path.resolve process.cwd(), directory\r\n  (name) =>\r\n    path.resolve p, name\r\n\r\nmodule.exports = {\r\n  getFullPath\r\n}\r\n"
   ]
 }
